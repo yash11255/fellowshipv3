@@ -8,9 +8,9 @@ import { btn, input } from "./ui";
 type Role = "customer" | "support" | "content" | "manager" | "owner";
 const ROLES: { id: Role; label: string; can: string }[] = [
   { id: "owner", label: "Owner", can: "Everything, incl. payments, taxes, staff" },
-  { id: "manager", label: "Manager", can: "Products, prices, discounts, SEO, orders" },
-  { id: "support", label: "Support", can: "View & fulfil orders, customers" },
-  { id: "content", label: "Content", can: "View admin (content tools coming)" },
+  { id: "manager", label: "Manager", can: "Applications, fees, content, SEO" },
+  { id: "support", label: "Support", can: "Review applications, students, enquiries" },
+  { id: "content", label: "Content", can: "Blog posts and pages" },
 ];
 
 export function StaffManager({ staff, me }: { staff: { email: string; role: Role; createdAt: string }[]; me: string }) {
@@ -24,7 +24,7 @@ export function StaffManager({ staff, me }: { staff: { email: string; role: Role
   return (
     <div className="space-y-4">
       <form onSubmit={(e) => { e.preventDefault(); run(email, role); }} className="flex flex-wrap items-end gap-2 rounded-xl border border-[#e3e3e3] bg-white p-4">
-        <label className="min-w-64 flex-1"><span className="text-[13px] font-medium">Invite by email</span><input type="email" required className={`${input} mt-1`} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@reverseclinics.com" /></label>
+        <label className="min-w-64 flex-1"><span className="text-[13px] font-medium">Invite by email</span><input type="email" required className={`${input} mt-1`} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@arthroscopycollege.com" /></label>
         <label><span className="text-[13px] font-medium">Role</span>
           <select className={`${input} mt-1`} value={role} onChange={(e) => setRole(e.target.value as Role)}>{ROLES.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}</select>
         </label>

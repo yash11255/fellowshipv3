@@ -34,7 +34,7 @@ export default async function Payments() {
         <ol className="list-decimal space-y-1 pl-5 text-[12px] text-grey">
           <li>Razorpay Dashboard → switch to <b>Test mode</b> → Account &amp; Settings → API Keys → Generate key. Paste Key ID and Secret above.</li>
           <li>Settings → Webhooks → Add: URL <code className="rounded bg-[#f4f4f4] px-1">{(process.env.SITE_URL ?? "https://your-domain")}/api/razorpay/webhook</code>, events <b>payment.captured</b>, set a secret and paste it above.</li>
-          <li>Click <b>Test connection</b>, then place a test order using Razorpay&apos;s test UPI <code className="rounded bg-[#f4f4f4] px-1">success@razorpay</code> or test card 4111 1111 1111 1111.</li>
+          <li>Click <b>Test connection</b>, then make a test payment on an accepted application using Razorpay&apos;s test UPI <code className="rounded bg-[#f4f4f4] px-1">success@razorpay</code> or test card 4111 1111 1111 1111.</li>
           <li>Going live: complete KYC in Razorpay, generate Live keys (rzp_live_…) and replace these.</li>
         </ol>
       </SettingsForm>

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 
-const tabs = [["/admin/settings", "General"], ["/admin/settings/seo", "SEO"], ["/admin/settings/payments", "Payments"], ["/admin/settings/taxes", "Taxes"], ["/admin/settings/shipping", "Shipping & delivery"]];
+const tabs = [["/admin/settings", "General"], ["/admin/settings/seo", "SEO"], ["/admin/settings/payments", "Payments"]];
 
 export function SettingsTabs() {
   const p = usePathname();

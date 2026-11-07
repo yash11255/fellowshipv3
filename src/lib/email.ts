@@ -14,7 +14,7 @@ export async function sendEmail({ to, subject, text, html }: { to: string; subje
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: process.env.EMAIL_FROM ?? "Reverse Clinics <orders@reverseclinics.com>", to, subject, text, html }),
+    body: JSON.stringify({ from: process.env.EMAIL_FROM ?? "Arthroscopy College <admissions@arthroscopycollege.com>", to, subject, text, html }),
   });
   if (!res.ok) throw new Error(`Email send failed: ${res.status}`);
 }

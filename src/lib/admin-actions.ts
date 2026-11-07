@@ -147,7 +147,7 @@ export async function shipOrder(number: string, provider: ProviderId, manual?: {
     const s = await createShipment(provider, o, items, manual);
     await d.update(schema.orders).set({ status: "shipped", carrier: s.carrier, trackingNumber: s.trackingNumber, trackingUrl: s.trackingUrl || null, shipmentRef: s.shipmentRef ?? null, shippedAt: new Date() })
       .where(and(eq(schema.orders.id, o.id)));
-    const base = process.env.SITE_URL ?? "http://localhost:3100";
+    const base = process.env.SITE_URL ?? "http://localhost:3200";
     await sendEmail({
       to: o.email, subject: `Your order ${o.number} has shipped`,
       text: `Good news, your order ${o.number} is on its way with ${s.carrier}.\nTracking number: ${s.trackingNumber}${s.trackingUrl ? `\nTrack: ${s.trackingUrl}` : ""}\nOrder details: ${base}/order/${o.number}?t=${orderToken(o.number)}`,
@@ -294,7 +294,7 @@ export async function sendRecoveryEmail(id: number) {
   const d = await db();
   const [r] = await d.select().from(schema.checkoutDrafts).where(eq(schema.checkoutDrafts.id, id)).limit(1);
   if (!r || r.recoveredOrderId) return { ok: false as const, error: "Already recovered." };
-  const base = process.env.SITE_URL ?? "http://localhost:3100";
+  const base = process.env.SITE_URL ?? "http://localhost:3200";
   await sendEmail({
     to: r.email, subject: "You left something in your cart",
     text: `Hi${r.name ? ` ${r.name.split(" ")[0]}` : ""},\n\nYour cart is saved: ${r.lines.map((l) => `${l.title} × ${l.qty}`).join(", ")}.\nPick up where you left off: ${base}/checkout?recover=${r.token}\n\nQuestions? Just reply to this email.`,

@@ -163,7 +163,7 @@ export async function razorpayAvailable() {
 }
 
 async function confirmationEmail(number: string, email: string, total: number, method: string) {
-  const base = process.env.SITE_URL ?? "http://localhost:3100";
+  const base = process.env.SITE_URL ?? "http://localhost:3200";
   await sendEmail({
     to: email,
     subject: `Order ${number} confirmed`,

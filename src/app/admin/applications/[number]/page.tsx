@@ -7,7 +7,7 @@ import { requireStaff } from "@/lib/admin";
 import { Card, dateTime, inr } from "@/components/admin/ui";
 import { getProgram } from "@/lib/programs";
 import { ApplicationDecision } from "@/components/admin/application-decision";
-import { STATUS_BADGE } from "../page";
+import { STATUS_BADGE } from "@/lib/application-status";
 
 export default async function Application({ params }: PageProps<"/admin/applications/[number]">) {
   await connection();
@@ -18,7 +18,7 @@ export default async function Application({ params }: PageProps<"/admin/applicat
   const p = getProgram(a.programSlug);
   const intl = !/^india$/i.test(a.country.trim());
   const defaultFee = a.feeAmount ?? (p?.fee.length ? (intl && p.fee[1] ? p.fee[1].amount : p.fee[0].amount) : null);
-  const base = process.env.SITE_URL ?? "http://localhost:3100";
+  const base = process.env.SITE_URL ?? "http://localhost:3200";
   const rows: [string, React.ReactNode][] = [
     ["Email", <a key="e" href={`mailto:${a.email}`} className="text-[#005bd3] hover:underline">{a.email}</a>],
     ["Phone", <a key="p" href={`https://wa.me/${a.phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="text-[#005bd3] hover:underline">{a.phone} (WhatsApp)</a>],

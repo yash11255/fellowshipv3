@@ -32,7 +32,7 @@ export async function submitEnquiry(raw: z.input<typeof Input>) {
     service: p.data.service || null, preferredDate: p.data.preferredDate || null, message: p.data.message,
   });
   await sendEmail({
-    to: process.env.TEAM_EMAIL ?? "team@reverseclinics.com",
+    to: process.env.TEAM_EMAIL ?? "orthosportin@gmail.com",
     subject: p.data.kind === "clinic" ? `New consultation request: ${p.data.service ?? "General"}` : `New contact message from ${p.data.name}`,
     text: `${p.data.name} <${p.data.email}> ${p.data.phone ?? ""}\n${p.data.service ? `Service: ${p.data.service}\n` : ""}${p.data.preferredDate ? `Preferred date: ${p.data.preferredDate}\n` : ""}\n${p.data.message}`,
   }).catch(() => {});

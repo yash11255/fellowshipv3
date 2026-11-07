@@ -37,7 +37,7 @@ export async function requestOtp(rawEmail: string): Promise<{ ok: true; devCode?
   await d.insert(schema.otpCodes).values({ email, codeHash: sha(`${email}:${code}`), expiresAt: new Date(Date.now() + OTP_MINUTES * 60_000) });
   await sendEmail({
     to: email,
-    subject: `${code} is your Reverse Clinics sign-in code`,
+    subject: `${code} is your Arthroscopy College sign-in code`,
     text: `Your sign-in code is ${code}. It expires in ${OTP_MINUTES} minutes. If you didn't request it, ignore this email.`,
   });
   return devCodesOnScreen() ? { ok: true, devCode: code } : { ok: true };

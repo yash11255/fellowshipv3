@@ -5,8 +5,8 @@ import { useRef, useState, useTransition } from "react";
 import { checkCode, sendCode } from "@/lib/auth-actions";
 
 const TEST_ACCOUNTS = [
-  { email: "admin@reverseclinics.test", label: "Store admin", sub: "Opens the admin panel" },
-  { email: "customer@reverseclinics.test", label: "Customer", sub: "Orders & account" },
+  { email: "admin@arthroscopycollege.test", label: "Admin", sub: "Opens the admin panel" },
+  { email: "student@arthroscopycollege.test", label: "Student", sub: "Applications dashboard" },
 ];
 
 export function LoginForm({ next, dev }: { next: string; dev: boolean }) {

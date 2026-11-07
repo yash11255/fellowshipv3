@@ -1,68 +1,60 @@
-// Rule-based shopping assistant (client-safe). Intent = keyword/regex match; product answers come from the live catalog index.
+// Rule-based admissions assistant (client-safe). Facts come from PROGRAMS/FAQS; anything else falls back to site search.
+import { PROGRAMS, inr } from "./programs";
 import { norm, search, type SearchItem } from "./search";
-import type { StoreSettings } from "./pricing";
 
-export type Reply = { text: string; products?: SearchItem[]; links?: { label: string; href: string }[]; chips?: string[] };
+export type Reply = { text: string; results?: SearchItem[]; links?: { label: string; href: string }[]; chips?: string[] };
 
-const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
+export const WHATSAPP = "https://wa.me/919650620870?text=Hi%2C%20I%20have%20a%20question%20about%20Arthroscopy%20College";
+export const START_CHIPS = ["Fellowship fee", "Programme duration", "Who can apply?", "How do I apply?", "Where is it?", "Talk to a human"];
 
-// concern → search phrase + the doctor's first-choice handles (mirrors stack-engine HERO)
-const CONCERNS: { re: RegExp; label: string; heroes: string[]; href: string }[] = [
-  { re: /joint|knee|cartilage|arthrit|stiff|back pain|mobility/, label: "joint comfort", heroes: ["collagen-joint-repair", "moringa-with-curcumin", "omega-3-fish-oil"], href: "/shop/joints-bones" },
-  { re: /bone|osteo|calcium/, label: "bone health", heroes: ["collagen-bone-health-60-tablets-copy", "magnesium-complex"], href: "/shop/joints-bones" },
-  { re: /sleep|insomnia|stress|anxi|calm|relax/, label: "sleep & stress", heroes: ["magnesium-complex"], href: "/shop/sleep-stress" },
-  { re: /energy|tired|fatigue|stamina|lethargic|weak/, label: "energy", heroes: ["shilajit-gold", "nad-longevity-shots-10-bottle", "sports-multivitamin"], href: "/shop/energy" },
-  { re: /skin|wrinkle|glow|collagen|fine line/, label: "skin", heroes: ["collagen-skin-age-rewind", "hair-skin-nail-multivitamin"], href: "/shop/skin-hair-nails" },
-  { re: /hair|hairfall|nail|bald/, label: "hair & nails", heroes: ["hair-skin-nail-multivitamin", "collagen-skin-age-rewind"], href: "/shop/skin-hair-nails" },
-  { re: /gut|bloat|digest|acidity|constipat|probiotic/, label: "gut health", heroes: ["pre-probiotic-gut-health"], href: "/shop/gut" },
-  { re: /heart|cholesterol|bp|blood pressure|cardio/, label: "heart health", heroes: ["omega-3-fish-oil"], href: "/shop/heart" },
-  { re: /sugar|diabet|glucose|insulin|metaboli/, label: "blood sugar", heroes: ["cinnamon-chromium-blood-sugar-balance-reverse-clinics-copy", "ala-300mg-boost-energy-antioxidant-support-reverse-clinics-60"], href: "/shop/metabolic" },
-  { re: /muscle|gym|workout|recovery|strength|creatine|athlet/, label: "performance & recovery", heroes: ["micronised-creatine-monohydrate", "sports-multivitamin", "magnesium-complex"], href: "/shop/sport" },
-  { re: /ageing|aging|longevity|nad|nmn|anti.?age|young/, label: "healthy ageing", heroes: ["nad-longevity-shots-10-bottle", "liposomal-nmn-with-trans-resveratrol", "quercetin-bromelain-immunity-allergy-relief-reverse-clinics-60"], href: "/shop/longevity" },
-  { re: /weight|fat|slim|obes/, label: "weight management", heroes: ["cinnamon-chromium-blood-sugar-balance-reverse-clinics-copy", "shilajit-gold"], href: "/shop/weight" },
-  { re: /immun|cold|allerg|infection/, label: "immunity", heroes: ["quercetin-bromelain-immunity-allergy-relief-reverse-clinics-60", "pre-probiotic-gut-health"], href: "/shop/immunity" },
-];
+const P = (slug: string) => PROGRAMS.find((p) => p.slug === slug)!;
+const feeLine = (slug: string) => { const p = P(slug); return p.fee.length ? p.fee.map((f) => `${f.label}: ${inr(f.amount)}${f.note ? ` ${f.note}` : ""}`).join("; ") : "shared by our coordinator after you apply"; };
 
-export const START_CHIPS = ["Help me choose", "Joint pain", "Low energy", "Track my order", "Delivery & COD", "Talk to a human"];
+function which(q: string) {
+  if (/acl course|next gen|nextgen|5 day|five day|quad|let\b/.test(q)) return "advance-acl-course";
+  if (/workshop|weekend|2 day|two day/.test(q)) return "acl-rehab-workshop";
+  if (/physio|internship|rehab/.test(q)) return "physiotherapy-internship";
+  if (/online/.test(q)) return "online-fellowship";
+  if (/fellowship|fellow/.test(q)) return "fellowship-in-arthroscopy";
+  return null;
+}
 
-export function respond(input: string, items: SearchItem[], s: StoreSettings, whatsapp: string): Reply {
+export function respond(input: string, items: SearchItem[]): Reply {
   const q = norm(input);
   const has = (re: RegExp) => re.test(q);
+  const slug = which(q);
+  const prog = slug ? P(slug) : null;
+  const progLinks = (s: string) => [{ label: "Programme details", href: `/programs/${s}` }, { label: "Apply", href: `/apply?program=${s}` }];
 
-  // Safety first: medical situations → doctor, no product push
-  if (has(/pregnan|breastfeed|nursing|lactat/)) return { text: "If you're pregnant or breastfeeding, please talk to your doctor before starting any supplement. Our clinic team can advise you personally.", links: [{ label: "Book a consultation", href: "/clinic" }] };
-  if (has(/chest pain|emergency|faint|suicid|overdose|bleeding/)) return { text: "That sounds urgent. Please contact a doctor or call 112 right away. I'm a shopping assistant and can't help with medical emergencies." };
-  if (has(/medicine|medication|warfarin|thinner|interact|side effect|kidney|liver|cancer|chemo/)) return { text: "I can't give medical advice, especially about medicines or conditions. Our stack builder leaves out formulas that may not suit common medications, and our clinic can review your case.", links: [{ label: "Find your stack (safety check)", href: "/stack-builder" }, { label: "Book a consultation", href: "/clinic" }] };
+  if (has(/chest pain|emergency|accident|injur(ed|y) (now|today)|bleeding/)) return { text: "For a medical emergency please call 112 or visit the nearest hospital. For an appointment with Dr. Manu Bora, message the clinic team.", links: [{ label: "WhatsApp the clinic", href: WHATSAPP }] };
+  if (has(/^(hi|hello|hey|namaste|hii+|good (morning|evening|afternoon))\b/)) return { text: "Hi! I'm the Arthroscopy College assistant. Ask me about programmes, fees, eligibility or how to apply.", chips: START_CHIPS };
+  if (has(/thank|thanks|great|awesome|perfect/)) return { text: "Happy to help! Anything else?", chips: ["How do I apply?", "Talk to a human"] };
 
-  if (has(/^(hi|hello|hey|namaste|hii+|good (morning|evening|afternoon))\b/)) return { text: "Hi! I'm the Reverse assistant. I can help you pick a formula, track an order, or answer delivery questions. What brings you here today?", chips: START_CHIPS };
-  if (has(/thank|thanks|great|awesome|perfect/)) return { text: "Happy to help! Anything else?", chips: ["Help me choose", "Delivery & COD"] };
-
-  if (has(/track|where is my order|order status|my order|awb|shipment|not received|delivered/)) {
-    const num = input.match(/RC-?\s?(\d{6})/i);
-    return { text: num ? `You can see live status and tracking for RC-${num[1]} in your account, or via the link in your confirmation email.` : "Sign in with the email you ordered with to see every order and its tracking. Your confirmation email also has a direct link.", links: [{ label: "My orders", href: "/account" }] };
+  if (has(/fee|fees|cost|price|charges|how much|payment|pay\b|emi|installment|deposit/)) {
+    if (prog) return { text: `${prog.title}: ${feeLine(prog.slug)}.${prog.deposit ? ` You pay ${prog.deposit}% at booking and the balance on joining.` : ""}`, links: progLinks(prog.slug) };
+    return { text: `Fellowship in Arthroscopy: ${feeLine("fellowship-in-arthroscopy")}. Next-Gen ACL Course: ${feeLine("advance-acl-course")}. ACL Rehab Workshop: ${feeLine("acl-rehab-workshop")}. Payment is online (UPI, cards, netbanking) after your application is accepted.`, chips: ["Fellowship fee", "ACL course fee", "Physiotherapy internship fee"] };
   }
-  if (has(/cod|cash on delivery|pay on delivery/)) return { text: s.codEnabled ? `Yes, Cash on Delivery is available on most pincodes${s.codFee ? ` (${inr(s.codFee)} COD fee)` : ""}. Check your pincode on any product page.` : "Right now we accept online payments only (UPI, cards, netbanking)." };
-  if (has(/ship|deliver|dispatch|how long|when will|courier|pincode/)) return { text: `Orders dispatch within 1–2 working days and usually arrive in 2–7 days depending on your city. Shipping is free above ${inr(s.freeShippingAt)}, otherwise ${inr(s.shippingFee)}. Enter your pincode on a product page for an exact estimate.`, chips: ["Delivery & COD", "Track my order"] };
-  if (has(/return|refund|exchange|cancel|damaged|wrong item/)) return { text: "Sorry if something isn't right. For damaged or wrong items, contact us within 48 hours of delivery with a photo and we'll replace or refund. Opened supplements can't be returned for hygiene reasons.", links: [{ label: "Refund policy", href: "/policies/refund" }, { label: "Contact us", href: whatsapp }] };
-  if (has(/pay|upi|card|emi|netbank|razorpay/)) return { text: "You can pay by UPI, cards, netbanking or wallets via Razorpay (secure), or Cash on Delivery where available." };
-  if (has(/discount|coupon|offer|promo|code|sale/)) return { text: "Every product shows its current saving, and 3- or 12-month supplies save up to 40%. Have a code? Apply it at checkout.", links: [{ label: "Shop 3-in-1 packs", href: "/shop/packs" }] };
-  if (has(/how (to|do i) (take|use)|dosage|dose|when to take|how many|empty stomach/)) return { text: "Follow the dose on the label, usually with a meal, at the same time each day. Give it 8–12 weeks of consistent use to judge results. If you take medication, check with your doctor first." };
-  if (has(/vegan|vegetarian|veg\b|gelatin|halal/)) return { text: "Most of our formulas are vegetarian (plant collagen, cellulose capsules). Omega-3 Fish Oil is not vegetarian. Each product page lists its ingredients." };
-  if (has(/doctor|clinic|consult|appointment|manu bora/)) return { text: "Our formulas are designed by Dr. Manu Bora, orthopaedic and sports-medicine surgeon. You can book a consultation with the clinic team for a personal plan.", links: [{ label: "Book a consultation", href: "/clinic" }] };
-  if (has(/human|agent|call|whatsapp|contact|support|talk to/)) return { text: "Sure, our team is on WhatsApp, Mon–Sat, 10am–7pm.", links: [{ label: "Chat on WhatsApp", href: whatsapp }] };
-  if (has(/help me choose|recommend|suggest|which (one|product)|what should i|not sure|confused|quiz|stack/)) return { text: "Tell me what you'd like to improve (e.g. joints, energy, sleep, skin), or take the 60-second quiz for a personalised stack with reasons for every pick.", chips: ["Joint pain", "Low energy", "Poor sleep", "Ageing skin", "Gut health"], links: [{ label: "Take the quiz", href: "/stack-builder" }] };
-
-  // Concern → curated picks
-  const concern = CONCERNS.find((c) => c.re.test(q));
-  if (concern) {
-    const picks = concern.heroes.map((h) => items.find((i) => i.handle === h && i.available)).filter((x): x is SearchItem => !!x).slice(0, 3);
-    const products = picks.length ? picks : search(items.filter((i) => i.available), concern.label, 3);
-    return { text: `For ${concern.label}, these are Dr. Bora's go-to formulas. For a stack tailored to you, try the quiz.`, products, links: [{ label: `Shop ${concern.label}`, href: concern.href }, { label: "Take the quiz", href: "/stack-builder" }] };
+  if (has(/how long|duration|days|weeks|month|extend/)) {
+    if (prog) return { text: `${prog.title} runs ${prog.duration}${prog.schedule ? `, ${prog.schedule.toLowerCase()}` : ""}.`, links: progLinks(prog.slug) };
+    return { text: PROGRAMS.filter((p) => p.slug !== "online-fellowship").map((p) => `${p.title}: ${p.duration}`).join(". ") + "." };
   }
+  if (has(/eligib|who can|qualif|require|criteria|mbbs|ms ortho|dnb|resident|student/)) {
+    if (prog) return { text: `${prog.title} is for: ${prog.eligibility.join("; ")}.`, links: progLinks(prog.slug) };
+    return { text: "Surgical programmes are for orthopaedic surgeons (MS/DNB Ortho), fellows and residents. Physiotherapy programmes are for physiotherapists, final-year students and coaches.", links: [{ label: "Compare programmes", href: "/programs" }] };
+  }
+  if (has(/apply|admission|enrol|enroll|register|join|seat|application|status/)) return { text: "Apply online in about three minutes. Our coordinator calls you within two working days. If you're accepted, you get a secure payment link to reserve your seat. You can track your application under Student login.", links: [{ label: "Apply now", href: slug ? `/apply?program=${slug}` : "/apply" }, { label: "Track my application", href: "/account" }] };
+  if (has(/certif|arthrex/)) return { text: "Yes. Every programme ends with a certificate, and the fellowship includes a certificate from Arthrex.", links: [{ label: "See certificate photos", href: "/gallery" }] };
+  if (has(/hands on|observ|operate|surgery|ot\b|theatre|cadaver|live/)) return { text: "Training is hands-on. Fellows scrub in for 30–40 surgeries a month with Dr. Manu Bora, plus knee and shoulder model training and VR sessions.", links: [{ label: "Watch from the theatre", href: "/videos" }] };
+  if (has(/where|location|address|city|gurgaon|gurugram|stay|hostel|accommodation|hotel/)) return { text: "Training happens in Gurugram, Haryana (Orthosport & Threads Physio, Golf Course Road, DLF Phase 1, Sector 27). For accommodation help, ask our team on WhatsApp.", links: [{ label: "Contact & map", href: "/contact-us" }, { label: "WhatsApp us", href: WHATSAPP }] };
+  if (has(/procedure|learn|curriculum|syllabus|cover|topics/)) {
+    const p = prog ?? P("fellowship-in-arthroscopy");
+    return { text: `${p.title} covers: ${p.curriculum.map((c) => `${c.title} (${c.items.slice(0, 3).join(", ")}${c.items.length > 3 ? "…" : ""})`).join("; ")}.`, links: progLinks(p.slug) };
+  }
+  if (has(/dr|doctor|manu|bora|faculty|mentor|teacher/)) return { text: "Programmes are led by Dr. Manu Bora, orthopaedic and arthroscopy surgeon and Arthrex Master Instructor. Physiotherapy programmes are led by Dr. Viraj Pandya, Head Physiotherapist at Threads Physio.", links: [{ label: "Meet Dr. Bora", href: "/dr-manu-bora" }] };
+  if (has(/human|agent|call|phone|whatsapp|contact|speak|talk/)) return { text: "Our admissions team is on WhatsApp and phone (+91 96506 20870), Mon–Sat.", links: [{ label: "Chat on WhatsApp", href: WHATSAPP }, { label: "Contact form", href: "/contact-us" }] };
+  if (prog) return { text: `${prog.title}: ${prog.short}`, links: progLinks(prog.slug) };
 
-  // Product / ingredient lookup
   const hits = search(items, input, 3);
-  if (hits.length) return { text: hits.length === 1 ? `Here's ${hits[0].title}:` : "Here's what I found:", products: hits };
-
-  return { text: "I'm not sure I understood. I can help with choosing a formula, delivery, COD, returns and order tracking.", chips: START_CHIPS };
+  if (hits.length) return { text: "Here's what I found:", results: hits };
+  return { text: "I'm not sure about that one. I can help with programmes, fees, eligibility and applications, or connect you with the team.", chips: START_CHIPS };
 }

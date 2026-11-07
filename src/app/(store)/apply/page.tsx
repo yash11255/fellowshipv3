@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Suspense } from "react";
 import { PROGRAMS } from "@/lib/programs";
 import { ApplyForm } from "@/components/apply/apply-form";
@@ -15,17 +16,17 @@ async function Form({ searchParams }: { searchParams: PageProps<"/apply">["searc
 
 export default function Apply({ searchParams }: PageProps<"/apply">) {
   return (
-    <div className="page pt-10 md:pt-14">
+    <div className="page py-10 text-ink md:py-16">
       <div className="grid gap-12 lg:grid-cols-12">
-        <div className="lg:col-span-4">
-          <p className="label text-brand">Admissions</p>
-          <h1 className="mt-3 text-[clamp(2.2rem,1.5rem+2.6vw,3.5rem)] font-semibold leading-[1] tracking-[-0.04em]">Apply to Arthroscopy College</h1>
+        <div className="lg:sticky lg:top-24 lg:col-span-4 lg:self-start">
+          <h1 className="text-[clamp(2.4rem,1.5rem+2.8vw,4rem)] font-semibold leading-[0.97] tracking-[-0.045em]">Apply to Arthroscopy College</h1>
+          <div className="relative mt-8 hidden aspect-[4/3] overflow-hidden rounded-[24px] lg:block"><Image src="/img/cert-1.jpg" alt="Fellow receiving a certificate from Dr. Manu Bora" fill sizes="30vw" className="object-cover" /></div>
           <ol className="mt-8 space-y-5">
             {STEPS.map(([t, d], i) => (
-              <li key={t} className="flex gap-4"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-navy text-[13px] font-semibold text-white">{i + 1}</span><span><span className="block font-semibold">{t}</span><span className="small">{d}</span></span></li>
+              <li key={t} className="flex gap-4"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-ink text-[13px] font-semibold text-white">{i + 1}</span><span><span className="block font-semibold">{t}</span><span className="text-[14px] text-ink/55">{d}</span></span></li>
             ))}
           </ol>
-          <p className="small mt-8">Prefer to talk? Call or WhatsApp <a href="https://wa.me/919650620870" className="text-black underline">+91 96506 20870</a>.</p>
+          <p className="mt-8 text-[14px] text-ink/60">Prefer to talk? Call or WhatsApp <a href="https://wa.me/919650620870" className="font-semibold text-ink underline">+91 96506 20870</a>.</p>
         </div>
         <div className="lg:col-span-8"><Suspense fallback={<div className="min-h-[60vh]" />}><Form searchParams={searchParams} /></Suspense></div>
       </div>

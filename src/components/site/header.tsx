@@ -14,7 +14,7 @@ const nav = [
   { href: "/videos", label: "Videos" },
   { href: "/gallery", label: "Gallery" },
   { href: "/journal", label: "Blog" },
-  { href: "/contact", label: "Contact" },
+  { href: "/contact-us", label: "Contact" },
 ];
 
 /* College nav: logo left, roomy links, navy apply pill; gains a hairline once scrolled. */

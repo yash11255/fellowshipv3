@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { PROGRAMS, getProgram, inr, FAQS } from "@/lib/programs";
 import { FEATURED_VIDEOS } from "@/lib/videos";
 import { getSeo } from "@/lib/settings";
@@ -32,7 +33,7 @@ const REHAB_PHOTOS: Photo[] = [
 
 const WA = "https://wa.me/919650620870?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20the%20program";
 
-export default async function Program({ params }: P) {
+async function ProgramBody({ params }: { params: P["params"] }) {
   const p = getProgram((await params).slug);
   if (!p) notFound();
   const { siteUrl } = await getSeo();
@@ -171,8 +172,8 @@ export default async function Program({ params }: P) {
         <section className="page grid gap-12 py-24 md:grid-cols-12 md:py-32">
           <Reveal className="md:col-span-4"><h2 className="text-[clamp(2rem,1.4rem+2vw,3.25rem)] font-semibold tracking-[-0.035em]">Questions</h2></Reveal>
           <div className="divide-y divide-ink/10 border-y border-ink/10 md:col-span-7 md:col-start-6">
-            {FAQS.map((f) => (
-              <details key={f.q} className="group py-6">
+            {FAQS.map((f, i) => (
+              <details key={f.q} id={`faq-${i}`} className="group scroll-mt-28 py-6">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-[18px] font-medium [&::-webkit-details-marker]:hidden">{f.q}<span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full border border-ink/15 transition-transform duration-300 group-open:rotate-45">+</span></summary>
                 <p className="mt-4 max-w-[62ch] leading-relaxed text-ink/65">{f.a}</p>
               </details>
@@ -206,4 +207,8 @@ export default async function Program({ params }: P) {
       </div>
     </div>
   );
+}
+
+export default function Program({ params }: P) {
+  return <Suspense fallback={<div className="page min-h-[80vh]" aria-busy />}><ProgramBody params={params} /></Suspense>;
 }

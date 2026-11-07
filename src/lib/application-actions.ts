@@ -74,7 +74,7 @@ export async function decideApplication(raw: z.input<typeof Decide>) {
   const [a] = await d.select().from(schema.applications).where(eq(schema.applications.id, p.id)).limit(1);
   if (!a) return { ok: false as const, error: "Not found" };
   const program = getProgram(a.programSlug);
-  const base = process.env.SITE_URL ?? "http://localhost:3100";
+  const base = process.env.SITE_URL ?? "http://localhost:3200";
   const patch: Partial<typeof schema.applications.$inferInsert> = { status: p.status, updatedAt: new Date(), cohort: p.cohort ?? a.cohort, staffNote: p.staffNote ?? a.staffNote };
 
   if (p.status === "accepted") {
@@ -101,12 +101,39 @@ export async function decideApplication(raw: z.input<typeof Decide>) {
 }
 
 // ── Payment link ──
+/** Dummy payments: allowed until Razorpay keys are added, outside production (or with PAYMENTS_TEST_MODE=1). */
+function testPaymentsAllowed() {
+  return process.env.PAYMENTS_TEST_MODE === "1" || process.env.NODE_ENV !== "production";
+}
+
+async function markPaid(a: typeof schema.applications.$inferSelect, paymentId: string) {
+  await sendEmail({ to: a.email, subject: `Seat confirmed: ${a.number}`, text: `Hi ${a.name.split(" ")[0]},\n\nWe've received ${inr(a.payNow ?? 0)}. Your seat is confirmed. Our coordinator will share joining details.\n\nPayment reference: ${paymentId}\n\nArthroscopy College` }).catch(() => {});
+  await sendEmail({ to: process.env.TEAM_EMAIL ?? "orthosportin@gmail.com", subject: `Fee paid: ${a.number} (${inr(a.payNow ?? 0)})`, text: `${a.name} · ${a.email} · ${paymentId}` }).catch(() => {});
+}
+
+/** Completes a dummy payment (test mode only). `outcome: "failed"` leaves the application unpaid. */
+export async function completeTestPayment(token: string, outcome: "success" | "failed") {
+  if (!/^[\w-]{16,64}$/.test(token)) return { ok: false as const, error: "Invalid link." };
+  if ((await razorpayEnabled()) || !testPaymentsAllowed()) return { ok: false as const, error: "Test payments are disabled." };
+  if (outcome === "failed") return { ok: false as const, error: "Test payment failed (simulated). Nothing was charged; try again." };
+  const d = await db();
+  const paymentId = `test_${crypto.randomBytes(6).toString("hex")}`;
+  const [a] = await d.update(schema.applications).set({ status: "paid", razorpayPaymentId: paymentId, paidAt: new Date(), updatedAt: new Date() })
+    .where(and(eq(schema.applications.paymentToken, token), eq(schema.applications.status, "accepted"))).returning();
+  if (!a) return { ok: false as const, error: "This payment link isn't active." };
+  await markPaid(a, paymentId);
+  return { ok: true as const, paymentId };
+}
+
 export async function startApplicationPayment(token: string) {
   if (!/^[\w-]{16,64}$/.test(token)) return { ok: false as const, error: "Invalid link." };
   const d = await db();
   const [a] = await d.select().from(schema.applications).where(eq(schema.applications.paymentToken, token)).limit(1);
   if (!a || a.status !== "accepted" || !a.payNow) return { ok: false as const, error: a?.status === "paid" ? "This fee has already been paid." : "This payment link isn't active." };
-  if (!(await razorpayEnabled())) return { ok: false as const, error: "Online payment isn't configured yet. Please contact the coordinator." };
+  if (!(await razorpayEnabled())) {
+    if (testPaymentsAllowed()) return { ok: true as const, test: true as const, amount: a.payNow * 100, number: a.number };
+    return { ok: false as const, error: "Online payment isn't configured yet. Please contact the coordinator." };
+  }
   const rzp = await createRazorpayOrder(a.payNow, a.number);
   await d.update(schema.applications).set({ razorpayOrderId: rzp.id }).where(eq(schema.applications.id, a.id));
   return { ok: true as const, keyId: rzp.keyId, orderId: rzp.id, amount: rzp.amount, number: a.number, prefill: { name: a.name, email: a.email, contact: a.phone } };
@@ -117,9 +144,6 @@ export async function confirmApplicationPayment(input: { token: string; orderId:
   const d = await db();
   const [a] = await d.update(schema.applications).set({ status: "paid", razorpayPaymentId: input.paymentId, paidAt: new Date(), updatedAt: new Date() })
     .where(and(eq(schema.applications.paymentToken, input.token), eq(schema.applications.razorpayOrderId, input.orderId), eq(schema.applications.status, "accepted"))).returning();
-  if (a) {
-    await sendEmail({ to: a.email, subject: `Seat confirmed: ${a.number}`, text: `Hi ${a.name.split(" ")[0]},\n\nWe've received ${inr(a.payNow ?? 0)}. Your seat is confirmed. Our coordinator will share joining details.\n\nArthroscopy College` }).catch(() => {});
-    await sendEmail({ to: process.env.TEAM_EMAIL ?? "orthosportin@gmail.com", subject: `Fee paid: ${a.number} (${inr(a.payNow ?? 0)})`, text: `${a.name} · ${a.email}` }).catch(() => {});
-  }
+  if (a) await markPaid(a, input.paymentId);
   return { ok: true as const };
 }

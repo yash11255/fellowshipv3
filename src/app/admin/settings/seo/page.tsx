@@ -16,7 +16,7 @@ export default async function Seo() {
         target={{ kind: "seo" }} initial={s}
         fields={[
           { name: "siteTitle", label: "Homepage title", type: "text", max: 70, help: "50–60 characters is ideal for Google." },
-          { name: "titleTemplate", label: "Page title template", type: "text", max: 70, help: "%s is replaced by the page title, e.g. “Shilajit Gold | Reverse Clinics”." },
+          { name: "titleTemplate", label: "Page title template", type: "text", max: 70, help: "%s is replaced by the page title, e.g. “Shilajit Gold | Arthroscopy College”." },
           { name: "siteDescription", label: "Default meta description", type: "textarea", max: 170, help: "120–160 characters. Shown under your link in search results." },
           { name: "siteUrl", label: "Canonical site URL", type: "url", help: "Used for canonical tags, sitemap and social previews." },
           { name: "ogImage", label: "Default social share image", type: "text", help: "1200×630 recommended. Path like /brand/og.jpg or a full URL." },

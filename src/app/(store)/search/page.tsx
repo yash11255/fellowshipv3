@@ -1,27 +1,25 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { getProducts, GOAL_LABELS } from "@/lib/catalog";
-import { norm, search, type SearchItem } from "@/lib/search";
-import { ProductCard } from "@/components/product-card";
+import { search } from "@/lib/search";
+import { buildSearchIndex } from "@/lib/search-index";
+import { ResultRow } from "@/components/search/search-overlay";
 
 export const metadata: Metadata = { title: "Search", robots: { index: false, follow: true } };
 
 async function Results({ searchParams }: { searchParams: PageProps<"/search">["searchParams"] }) {
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q.slice(0, 80) : "";
-  const ps = (await getProducts()).filter((p) => p.kind !== "gift");
-  const idx: SearchItem[] = ps.map((p) => ({ handle: p.handle, title: p.title, price: p.variants[0]?.price ?? 0, compareAt: 0, kind: p.kind, goals: (p.goals ?? []).map((g) => GOAL_LABELS[g]), actives: (p.keyActives ?? []).map((a) => a.name), available: p.available, text: norm(`${p.description} ${(p.goals ?? []).join(" ")}`) }));
-  const hits = search(idx, q, 40).map((h) => ps.find((p) => p.handle === h.handle)!).filter(Boolean);
+  const hits = search(await buildSearchIndex(), q, 40);
   return (
     <>
-      <h1 className="hd-1">{q ? <>Results for “{q}”</> : "Search"}</h1>
-      <p className="small mt-2">{hits.length} product{hits.length === 1 ? "" : "s"}</p>
-      <form className="mt-6 flex max-w-xl"><input name="q" defaultValue={q} placeholder="Search products, ingredients or concerns" className="h-12 flex-1 border border-black px-4 text-[15px] outline-none" /><button className="h-12 bg-black px-6 text-[12px] font-semibold uppercase tracking-[0.06em] text-white">Search</button></form>
-      <div className="mt-10 grid grid-cols-2 gap-x-3 gap-y-10 md:grid-cols-3 md:gap-x-4 xl:grid-cols-4">{hits.map((p) => <ProductCard key={p.handle} product={p} />)}</div>
+      <h1 className="text-[clamp(2rem,1.4rem+2vw,3rem)] font-semibold tracking-[-0.035em]">{q ? <>Results for “{q}”</> : "Search"}</h1>
+      <form className="mt-6 flex max-w-xl gap-2"><input name="q" defaultValue={q} placeholder="Search programmes, fees, articles" className="h-12 flex-1 rounded-full border border-ink/15 px-5 text-[15px] outline-none focus:border-ink" /><button className="h-12 rounded-full bg-ink px-6 text-[14px] font-semibold text-white">Search</button></form>
+      <p className="mt-6 text-[14px] text-ink/50">{hits.length} result{hits.length === 1 ? "" : "s"}</p>
+      <ul className="mt-2 grid gap-1 md:grid-cols-2">{hits.map((r, i) => <li key={r.href + i}><ResultRow r={r} /></li>)}</ul>
     </>
   );
 }
 
 export default function Page({ searchParams }: PageProps<"/search">) {
-  return <div className="page pt-10"><Suspense fallback={<div className="min-h-[50vh]" />}><Results searchParams={searchParams} /></Suspense></div>;
+  return <div className="page py-10 md:py-16"><Suspense fallback={<div className="min-h-[50vh]" />}><Results searchParams={searchParams} /></Suspense></div>;
 }

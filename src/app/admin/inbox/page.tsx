@@ -14,7 +14,7 @@ export default async function Inbox() {
   const open = rows.filter((r) => !r.handled).length;
   return (
     <>
-      <PageHeader title="Inbox" sub={`${open} open · consultation requests and contact messages`} />
+      <PageHeader title="Enquiries" sub={`${open} open · messages from the contact form`} />
       <Card>
         <ul className="divide-y divide-[#f0f0f0]">
           {rows.map((r) => (
