@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+/* ──────────────────────────────────────────────────────────────
+   Reverse Clinics: design tokens (v2, retail)
+   White + black, cool grey tiles. One type family (Archivo).
+   Brand yellow only on the logo and tiny status marks.
+   ────────────────────────────────────────────────────────────── */
+
+@theme {
+  --color-white: #ffffff;
+  --color-tile: #f3f3f3;     /* product tiles, wells */
+  --color-line: #e5e5e5;     /* borders */
+  --color-mute: #8c8c8c;     /* tertiary text */
+  --color-grey: #555555;     /* secondary text */
+  --color-black: #000000;
+  --color-brand: #4c6fb4;    /* college blue */
+  --color-navy: #192136;     /* college navy */
+  --color-sale: #c8102e;     /* discount */
+  --color-ok: #1f7a3f;       /* in stock */
+
+  --font-sans: var(--font-archivo), -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+
+  --container-page: 96rem;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: #fff;
+    color: #1d1d1f;
+    font-family: var(--font-sans);
+    letter-spacing: -0.01em;
+    font-size: 15px;
+    line-height: 1.55;
+    font-variant-numeric: tabular-nums;
+  }
+  ::selection { background: #000; color: #fff; }
+  :focus-visible { outline: 2px solid #000; outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+}
+
+@layer components {
+  .page { width: 100%; max-width: var(--container-page); margin-inline: auto; padding-inline: 16px; }
+  @media (min-width: 768px) { .page { padding-inline: 32px; } }
+  @media (min-width: 1280px) { .page { padding-inline: 48px; } }
+
+  /* Headlines: Archivo, bold, slightly expanded, tight */
+  .hd-display { font-size: clamp(2.75rem, 1.6rem + 5vw, 6rem); line-height: .92; font-weight: 700; letter-spacing: -0.035em; font-stretch: 112%; text-transform: uppercase; }
+  .hd-1 { font-size: clamp(2rem, 1.4rem + 2.6vw, 3.5rem); line-height: 1; font-weight: 700; letter-spacing: -0.03em; font-stretch: 108%; text-transform: uppercase; }
+  .hd-2 { font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.25rem); line-height: 1.08; font-weight: 600; letter-spacing: -0.02em; }
+  .hd-3 { font-size: clamp(1.125rem, 1rem + .4vw, 1.375rem); line-height: 1.25; font-weight: 600; letter-spacing: -0.01em; }
+  .label { font-size: 12px; line-height: 1.2; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+  .body { font-size: 15px; line-height: 1.6; color: var(--color-grey); }
+  .small { font-size: 13px; line-height: 1.45; color: var(--color-grey); }
+}
+
+/* CMS / journal typography */
+@layer components {
+  .prose-rc { font-size: 16px; line-height: 1.75; color: #2b2b2b; max-width: 72ch; }
+  .prose-rc > * + * { margin-top: 1.1em; }
+  .prose-rc h2 { font-size: clamp(1.4rem, 1.2rem + .8vw, 1.9rem); line-height: 1.15; font-weight: 600; letter-spacing: -0.02em; color: #000; margin-top: 2em; }
+  .prose-rc h3 { font-size: 1.25rem; line-height: 1.25; font-weight: 600; color: #000; margin-top: 1.6em; }
+  .prose-rc h4 { font-size: 1.05rem; font-weight: 600; color: #000; margin-top: 1.4em; }
+  .prose-rc a { color: #000; text-decoration: underline; text-underline-offset: 3px; }
+  .prose-rc ul { list-style: disc; padding-left: 1.3em; }
+  .prose-rc ol { list-style: decimal; padding-left: 1.3em; }
+  .prose-rc li + li { margin-top: .35em; }
+  .prose-rc img { width: 100%; height: auto; background: var(--color-tile); margin-block: 1.5em; }
+  .prose-rc blockquote { border-left: 2px solid #000; padding-left: 1em; font-size: 1.1em; color: #000; }
+  .prose-rc table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .prose-rc th, .prose-rc td { border-bottom: 1px solid var(--color-line); padding: .6em .4em; text-align: left; }
+  .prose-rc details { border-bottom: 1px solid var(--color-line); padding: .9em 0; }
+  .prose-rc summary { cursor: pointer; font-weight: 600; color: #000; }
+}

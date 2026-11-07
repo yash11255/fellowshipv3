@@ -1,0 +1,31 @@
+import Link from "next/link";
+
+const cols = [
+  { title: "Programs", links: [["Fellowship in Arthroscopy", "/programs/fellowship-in-arthroscopy"], ["Next-Gen ACL Course", "/programs/advance-acl-course"], ["Physiotherapy Internship", "/programs/physiotherapy-internship"], ["ACL Rehab Workshop", "/programs/acl-rehab-workshop"], ["Online Fellowship", "/programs/online-fellowship"]] },
+  { title: "Admissions", links: [["Apply", "/apply"], ["Student login", "/account"], ["FAQs", "/faq"]] },
+  { title: "Explore", links: [["Dr. Manu Bora", "/dr-manu-bora"], ["Videos", "/videos"], ["Gallery", "/gallery"], ["Blog", "/journal"]] },
+  { title: "Contact", links: [["+91 96506 20870", "tel:+919650620870"], ["orthosportin@gmail.com", "mailto:orthosportin@gmail.com"], ["WhatsApp", "https://wa.me/919650620870"], ["Visit us", "/contact"]] },
+] as const;
+
+/* Apple-style footer: light grey, small type, columns, hairline divider. */
+export function Footer() {
+  return (
+    <footer className="bg-[#f5f5f7] text-[12px] text-[#6e6e73]">
+      <div className="mx-auto max-w-[1024px] px-4 py-10">
+        <p className="border-b border-[#d2d2d7] pb-4 leading-relaxed">Arthroscopy College, a training program of Orthosport × Threads Physio. F-10/4, Basement, Golf Course Rd, DLF Phase 1, Sector 27, Gurugram, Haryana 122001.</p>
+        <div className="grid grid-cols-2 gap-8 py-6 md:grid-cols-4">
+          {cols.map((c) => (
+            <div key={c.title}>
+              <p className="font-semibold text-[#1d1d1f]">{c.title}</p>
+              <ul className="mt-2 space-y-2">{c.links.map(([l, h]) => <li key={h}><Link href={h} className="hover:text-[#1d1d1f] hover:underline">{l}</Link></li>)}</ul>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-col gap-2 border-t border-[#d2d2d7] pt-4 md:flex-row md:justify-between">
+          <p>Copyright © 2026 Arthroscopy College. All rights reserved.</p>
+          <p className="flex gap-4"><Link href="/privacy-policy" className="hover:underline">Privacy Policy</Link><Link href="/terms-conditions" className="hover:underline">Terms</Link><Link href="/disclaimer" className="hover:underline">Disclaimer</Link></p>
+        </div>
+      </div>
+    </footer>
+  );
+}
