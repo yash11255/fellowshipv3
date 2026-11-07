@@ -6,6 +6,7 @@ import { LiteYouTube } from "@/components/video/lite-youtube";
 import { HeroFilm } from "@/components/college/hero-film";
 import { Carousel } from "@/components/college/carousel";
 import { Reveal } from "@/components/college/reveal";
+import { Parallax } from "@/components/college/parallax";
 import { ProgrammeShowcase } from "@/components/college/programme-showcase";
 
 /* Arthroscopy College: editorial, left-aligned, navy ink + teal accent. Film-led, generous whitespace. */
@@ -31,7 +32,7 @@ export default async function Home() {
         <div aria-hidden className="absolute inset-0 -z-[5] bg-[linear-gradient(to_top,rgba(15,21,38,.85),rgba(15,21,38,.15)_55%,rgba(15,21,38,.35))]" />
         <div className="page w-full pb-14 pt-32 md:pb-20">
           <p className="flex items-center gap-3 text-[13px] font-medium uppercase tracking-[0.18em] text-white/80"><span className="live-dot" /> Filmed in our operating theatre</p>
-          <h1 className="mt-6 max-w-[13ch] text-[clamp(2.8rem,1.4rem+6vw,7.25rem)] font-semibold leading-[0.95] tracking-[-0.045em]">Train where the surgery happens.</h1>
+          <h1 className="mt-5 max-w-[13ch] text-[clamp(2.8rem,1.4rem+6vw,7.25rem)] font-semibold leading-[0.95] tracking-[-0.045em]">Train where the surgery happens.</h1>
           <div className="mt-10 flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
             <p className="max-w-[44ch] text-[clamp(1.05rem,0.95rem+0.4vw,1.3rem)] leading-relaxed text-white/85">A one-month arthroscopy fellowship with Dr. Manu Bora, Arthrex Master Instructor. You scrub in, assist and operate.</p>
             <div className="flex flex-wrap gap-3">
@@ -54,7 +55,7 @@ export default async function Home() {
       {/* Statement */}
       <section className="page grid gap-10 py-28 md:grid-cols-12 md:py-40">
         <Reveal className="md:col-span-8">
-          <p className="text-[clamp(1.9rem,1.2rem+2.6vw,3.5rem)] font-medium leading-[1.12] tracking-[-0.03em]">
+          <p className="text-[clamp(1.75rem,1.2rem+2vw,3rem)] font-medium leading-[1.12] tracking-[-0.03em]">
             India&apos;s highest volume of ACL internal-brace surgery happens here. <span className="text-ink/40">Our fellows stand at the table for every one of them.</span>
           </p>
         </Reveal>
@@ -68,9 +69,9 @@ export default async function Home() {
       </section>
 
       {/* Programmes: interactive showcase */}
-      <section className="bg-mist py-24 md:py-36">
+      <section className="bg-mist py-16 md:py-20">
         <div className="page">
-          <Reveal className="mb-14 flex flex-wrap items-end justify-between gap-6">
+          <Reveal className="mb-10 flex flex-wrap items-end justify-between gap-6">
             <h2 className="max-w-[14ch] text-[clamp(2.2rem,1.4rem+2.6vw,3.75rem)] font-semibold leading-[1.02] tracking-[-0.04em]">Four ways to train with us.</h2>
             <Link href="/programs" className="text-[15px] font-semibold text-brand hover:underline">Compare all programmes →</Link>
           </Reveal>
@@ -78,24 +79,47 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Dr. Bora: split portrait */}
-      <section className="page grid items-center gap-12 py-28 md:grid-cols-2 md:gap-20 md:py-40">
-        <Reveal>
-          <div className="relative aspect-[4/5] overflow-hidden rounded-[28px] bg-mist">
-            <Image src="/brand/dr-manu-bora.jpg" alt="Dr. Manu Bora" fill sizes="(min-width:768px) 45vw, 100vw" className="object-cover object-top" />
+      {/* Dr. Bora: dark feature with parallax portrait */}
+      <section className="py-4 md:py-6">
+        <div className="mx-auto max-w-[1600px] px-3 md:px-6">
+          <div className="relative overflow-hidden rounded-[32px] bg-navy text-white md:rounded-[40px]">
+            <div className="grid lg:grid-cols-[1.05fr_1fr]">
+              <div className="relative z-10 flex flex-col justify-between gap-8 p-8 sm:p-10 lg:p-12 xl:p-14">
+                <Reveal>
+                  <p className="flex items-center gap-3 text-[13px] font-medium uppercase tracking-[0.18em] text-teal"><span className="h-px w-8 bg-teal" />Your mentor</p>
+                  <h2 className="mt-6 text-[clamp(2.4rem,1.6rem+2.8vw,4rem)] font-semibold leading-[0.95] tracking-[-0.045em]">Dr. Manu<br />Bora</h2>
+                  <p className="mt-5 max-w-[46ch] text-[17px] leading-relaxed text-white/70">Orthopaedic and arthroscopy surgeon in Gurugram, and one of India&apos;s leading voices on internal-brace ligament surgery. In his theatre, fellows don&apos;t watch from the gallery. They scrub in.</p>
+                </Reveal>
+                <Reveal delay={0.1}>
+                  <dl className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl bg-white/10 sm:grid-cols-3">
+                    {[["Master Instructor", "Arthrex"], ["Highest volume", "ACL internal brace in India"], ["All-inside", "ACL & PCL reconstruction"]].map(([k, v]) => (
+                      <div key={k} className="bg-navy px-5 py-4"><dt className="text-[17px] font-semibold tracking-[-0.01em]">{k}</dt><dd className="mt-1 text-[14px] text-white/55">{v}</dd></div>
+                    ))}
+                  </dl>
+                </Reveal>
+                <Reveal delay={0.2}>
+                  <p className="text-[13px] font-medium uppercase tracking-[0.16em] text-white/45">Operates on</p>
+                  <ul className="mt-4 flex flex-wrap gap-2">
+                    {["ACL / PCL", "Meniscus", "MCL / LCL", "Cartilage (AutoCart)", "Rotator cuff", "Bankart", "ATFL"].map((t) => <li key={t} className="rounded-full border border-white/15 px-4 py-1.5 text-[14px] text-white/80 transition-colors hover:border-teal hover:text-teal">{t}</li>)}
+                  </ul>
+                  <div className="mt-7 flex flex-wrap items-center gap-6">
+                    <Link href="/dr-manu-bora" className="inline-flex h-12 items-center rounded-full bg-white px-6 text-[14px] font-semibold text-ink transition-transform hover:-translate-y-0.5">Meet Dr. Bora</Link>
+                    <Link href="/videos" className="group inline-flex items-center gap-3 text-[14px] font-semibold"><span className="grid size-10 place-items-center rounded-full border border-white/30 transition-colors group-hover:bg-teal group-hover:text-ink"><svg width="10" height="10" viewBox="0 0 12 12" aria-hidden><path d="M3 1l8 5-8 5z" fill="currentColor" /></svg></span>Watch him operate</Link>
+                  </div>
+                </Reveal>
+              </div>
+              <Parallax className="relative min-h-[420px] lg:min-h-full">
+                <Image src="/brand/dr-manu-bora.jpg" alt="Dr. Manu Bora" fill sizes="(min-width:1024px) 48vw, 100vw" className="object-cover object-top" />
+                <div aria-hidden className="absolute inset-0 bg-[linear-gradient(to_right,var(--color-navy),transparent_30%)] max-lg:bg-[linear-gradient(to_bottom,var(--color-navy),transparent_25%)]" />
+              </Parallax>
+            </div>
           </div>
-        </Reveal>
-        <Reveal delay={0.15}>
-          <h2 className="text-[clamp(2.2rem,1.4rem+3vw,4rem)] font-semibold leading-[1.02] tracking-[-0.04em]">Taught by Dr. Manu Bora.</h2>
-          <p className="mt-6 max-w-[46ch] text-[18px] leading-relaxed text-ink/70">Orthopaedic and arthroscopy surgeon and Arthrex Master Instructor, known for all-inside ACL and PCL reconstruction with FiberTape internal brace. He operates, explains every step and lets you do the work.</p>
-          <blockquote className="mt-10 border-l-2 border-teal pl-6 text-[20px] font-medium leading-snug tracking-[-0.01em]">&ldquo;The best way to learn surgery is to be in surgery.&rdquo;</blockquote>
-          <Link href="/dr-manu-bora" className="mt-10 inline-flex items-center gap-2 text-[15px] font-semibold text-brand hover:gap-3 transition-all">Read his story <span aria-hidden>→</span></Link>
-        </Reveal>
+        </div>
       </section>
 
       {/* Films carousel, dark */}
       <section className="bg-ink py-24 text-white md:py-32">
-        <div className="page mb-12 flex flex-wrap items-end justify-between gap-6">
+        <div className="page mb-8 flex flex-wrap items-end justify-between gap-6">
           <Reveal><h2 className="max-w-[18ch] text-[clamp(2rem,1.4rem+2vw,3.25rem)] font-semibold leading-[1.05] tracking-[-0.035em]">From the theatre, unedited.</h2></Reveal>
           <Link href="/videos" className="text-[15px] font-semibold text-teal hover:underline">All {VIDEOS.length} films →</Link>
         </div>
@@ -110,8 +134,8 @@ export default async function Home() {
       </section>
 
       {/* Fellows carousel */}
-      <section className="py-24 md:py-32">
-        <div className="page mb-12 flex flex-wrap items-end justify-between gap-6">
+      <section className="py-16 md:py-20">
+        <div className="page mb-8 flex flex-wrap items-end justify-between gap-6">
           <Reveal><h2 className="text-[clamp(2rem,1.4rem+2vw,3.25rem)] font-semibold tracking-[-0.035em]">Certified every month.</h2></Reveal>
           <Link href="/gallery" className="text-[15px] font-semibold text-brand hover:underline">Gallery →</Link>
         </div>
@@ -140,7 +164,7 @@ export default async function Home() {
       {/* Closing */}
       <section className="relative isolate overflow-hidden bg-navy text-white">
         <Image src="/img/ot-2.webp" alt="" fill sizes="100vw" className="-z-10 object-cover opacity-25" />
-        <div className="page py-28 md:py-40">
+        <div className="page py-16 md:py-24">
           <Reveal>
             <h2 className="max-w-[16ch] text-[clamp(2.4rem,1.4rem+4vw,5rem)] font-semibold leading-[1] tracking-[-0.045em]">A few seats. Every month.</h2>
             <p className="mt-6 max-w-[40ch] text-[18px] text-white/75">Apply in three minutes. Our team calls you within two working days.</p>
