@@ -20,9 +20,10 @@ async function Shell({ children }: { children: React.ReactNode }) {
         <div className="hidden px-5 pb-5 text-[12px] text-grey lg:absolute lg:bottom-0 lg:block">
           <p className="truncate font-medium text-black">{user.email}</p>
           <p className="capitalize">{user.role}</p>
+          <p className="mt-4 border-t border-line pt-3 text-[11px]">Powered by <span className="font-semibold text-black">One Hand Labs</span></p>
         </div>
       </aside>
-      <main className="min-w-0 px-4 py-6 md:px-8 md:py-8">{children}</main>
+      <main className="min-w-0 px-4 py-6 md:px-8 md:py-8">{children}<p className="mt-10 text-center text-[11px] text-grey lg:hidden">Powered by <span className="font-semibold text-black">One Hand Labs</span></p></main>
     </div>
   );
 }
