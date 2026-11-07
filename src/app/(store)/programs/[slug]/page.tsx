@@ -103,8 +103,8 @@ export default async function Program({ params }: P) {
       </section>
 
       {/* Curriculum */}
-      <section className="bg-mist py-16 md:py-20">
-        <div className="page">
+      <section className="page">
+        <div className="rounded-[32px] bg-mist px-5 py-10 sm:px-10 md:rounded-[40px] md:py-14 lg:px-14">
           <Reveal className="mb-10"><h2 className="text-[clamp(2rem,1.4rem+2.2vw,3.5rem)] font-semibold tracking-[-0.04em]">What you&apos;ll learn</h2></Reveal>
           <Reveal delay={0.1}><Curriculum modules={p.curriculum} /></Reveal>
         </div>
@@ -156,8 +156,8 @@ export default async function Program({ params }: P) {
       </section>
 
       {/* Films */}
-      <section className="bg-ink py-16 text-white md:py-20">
-        <div className="page">
+      <section className="page py-6">
+        <div className="rounded-[32px] bg-ink px-5 py-10 text-white sm:px-10 md:rounded-[40px] md:py-14 lg:px-14">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-6">
             <Reveal><h2 className="text-[clamp(2rem,1.4rem+2vw,3.25rem)] font-semibold tracking-[-0.035em]">See it before you join</h2></Reveal>
             <Link href="/videos" className="text-[15px] font-semibold text-teal hover:underline">All films →</Link>
@@ -182,7 +182,7 @@ export default async function Program({ params }: P) {
       )}
 
       {/* Other programmes */}
-      <section className="border-t border-ink/10 py-14 md:py-20">
+      <section className="py-14 md:py-20">
         <div className="page">
           <h2 className="text-[clamp(1.6rem,1.2rem+1.2vw,2.25rem)] font-semibold tracking-[-0.03em]">Other programmes</h2>
           <ul className="mt-10 grid gap-5 md:grid-cols-3">
