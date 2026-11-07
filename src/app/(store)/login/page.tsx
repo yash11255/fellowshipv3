@@ -12,7 +12,8 @@ async function Login({ searchParams }: { searchParams: PageProps<"/login">["sear
   const raw = typeof sp.next === "string" ? sp.next : "/account";
   const next = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/account"; // no open redirects
   if (await currentUser()) redirect(next);
-  return <LoginForm next={next} dev={devCodesOnScreen()} />;
+  const email = typeof sp.email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sp.email) ? sp.email : "";
+  return <LoginForm next={next} dev={devCodesOnScreen()} initialEmail={email} />;
 }
 
 const PERKS = ["Track orders and deliveries", "Reorder your stack in one tap", "Saved address for faster checkout", "Members-only offers"];

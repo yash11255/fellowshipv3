@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, or } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { currentUser } from "@/lib/auth";
 import { logout } from "@/lib/auth-actions";
@@ -96,7 +96,7 @@ function AppCard({ a, p }: { a: App; p?: Program }) {
 async function Dashboard() {
   const user = await currentUser();
   if (!user) redirect("/login?next=/account");
-  const apps = await (await db()).select().from(schema.applications).where(eq(schema.applications.email, user.email.toLowerCase())).orderBy(desc(schema.applications.createdAt));
+  const apps = await (await db()).select().from(schema.applications).where(or(eq(schema.applications.email, user.email.toLowerCase()), eq(schema.applications.userId, user.id))).orderBy(desc(schema.applications.createdAt));
   const all = await getAllPrograms();
   const first = apps[0]?.name.split(" ")[0];
   const enrolled = apps.some((a) => a.status === "paid" || a.status === "enrolled");
@@ -117,7 +117,7 @@ async function Dashboard() {
         <div className="mt-10 grid overflow-hidden rounded-[32px] bg-mist md:grid-cols-2">
           <div className="p-8 md:p-12">
             <p className="text-[24px] font-semibold tracking-[-0.02em]">No applications under this email yet.</p>
-            <p className="mt-2 text-ink/60">Applied with a different email? Sign out and sign in with that one.</p>
+            <p className="mt-2 text-ink/60">You&apos;re signed in as <strong>{user.email}</strong>. Applied with a different email? Sign out and sign in with that one.</p>
             <Link href="/apply" className="mt-6 inline-flex h-12 items-center rounded-full bg-ink px-6 text-[14px] font-semibold text-white hover:bg-brand">Start an application</Link>
           </div>
           <div className="relative min-h-[220px]"><Image src="/img/cert-1.jpg" alt="" fill sizes="50vw" className="object-cover" /></div>

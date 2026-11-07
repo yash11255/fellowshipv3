@@ -7,7 +7,9 @@ import { submitApplication } from "@/lib/application-actions";
 
 type Opt = { slug: string; title: string; audience: string };
 
-export function ApplyForm({ programs, initial }: { programs: Opt[]; initial?: string }) {
+export function ApplyForm({ programs, initial, signedInEmail }: { programs: Opt[]; initial?: string; signedInEmail?: string }) {
+  const [email, setEmail] = useState(signedInEmail ?? "");
+  const [appliedEmail, setAppliedEmail] = useState("");
   const [program, setProgram] = useState(initial ?? programs[0].slug);
   const [err, setErr] = useState<{ msg: string; field?: string } | null>(null);
   const [done, setDone] = useState<string | null>(null);
@@ -18,8 +20,8 @@ export function ApplyForm({ programs, initial }: { programs: Opt[]; initial?: st
     <div className="rounded-[32px] bg-navy p-8 text-white md:p-12">
       <p className="text-[13px] font-medium uppercase tracking-[0.16em] text-teal">Application {done}</p>
       <h2 className="mt-3 text-[28px] font-semibold tracking-[-0.02em]">Thank you, we&apos;ve got it.</h2>
-      <p className="mt-3 max-w-[52ch] text-white/75">We&apos;ve emailed a confirmation. Our coordinator will review your application and call you within 2 working days. Sign in with the same email to track its status.</p>
-      <div className="mt-6 flex flex-wrap gap-3"><Link href="/account" className="inline-flex h-11 items-center rounded-full bg-teal px-6 text-[14px] font-semibold text-ink">Track application</Link><Link href="/programs" className="inline-flex h-11 items-center rounded-full border border-white/30 px-6 text-[14px] font-semibold">Back to programmes</Link></div>
+      <p className="mt-3 max-w-[52ch] text-white/75">We&apos;ve emailed a confirmation. Our coordinator will review your application and call you within 2 working days. {signedInEmail ? " It's already in your dashboard." : <> Sign in with <strong>{appliedEmail}</strong> to track it.</>}</p>
+      <div className="mt-6 flex flex-wrap gap-3"><Link href={signedInEmail ? "/account" : `/login?next=/account&email=${encodeURIComponent(appliedEmail)}`} className="inline-flex h-11 items-center rounded-full bg-teal px-6 text-[14px] font-semibold text-ink">Track application</Link><Link href="/programs" className="inline-flex h-11 items-center rounded-full border border-white/30 px-6 text-[14px] font-semibold">Back to programmes</Link></div>
     </div>
   );
 
@@ -33,7 +35,7 @@ export function ApplyForm({ programs, initial }: { programs: Opt[]; initial?: st
       start(async () => {
         const r = await submitApplication({ programSlug: program, name: g("name"), email: g("email"), phone: g("phone"), country: g("country") || "India", qualification: g("qualification"),
           institution: g("institution"), experienceYears: g("experience") ? Number(g("experience")) : null, preferredStart: g("start"), cvLink: g("cv"), message: g("message"), website: g("website") });
-        if (r.ok) { setDone(r.number); window.scrollTo({ top: 0, behavior: "smooth" }); } else setErr({ msg: r.error, field: "field" in r ? r.field : undefined });
+        if (r.ok) { setAppliedEmail(g("email").toLowerCase()); setDone(r.number); window.scrollTo({ top: 0, behavior: "smooth" }); } else setErr({ msg: r.error, field: "field" in r ? r.field : undefined });
       });
     }}>
       <fieldset>
@@ -52,7 +54,7 @@ export function ApplyForm({ programs, initial }: { programs: Opt[]; initial?: st
         <legend className="text-[20px] font-semibold tracking-[-0.02em]">2. About you</legend>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block"><span className="text-[13px] font-medium">Full name (as on certificate)</span><input name="name" autoComplete="name" className={field("name")} />{errOf("name")}</label>
-          <label className="block"><span className="text-[13px] font-medium">Email</span><input name="email" type="email" autoComplete="email" className={field("email")} />{errOf("email")}</label>
+          <label className="block"><span className="text-[13px] font-medium">Email</span><input name="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={field("email")} />{signedInEmail && email.trim().toLowerCase() !== signedInEmail.toLowerCase() && <span className="mt-1 block text-[12px] text-[#8a5a00]">You&apos;re signed in as {signedInEmail}. This application will still show in that dashboard.</span>}{errOf("email")}</label>
           <label className="block"><span className="text-[13px] font-medium">Phone / WhatsApp (with country code)</span><input name="phone" type="tel" autoComplete="tel" placeholder="+91 98xxxxxxxx" className={field("phone")} />{errOf("phone")}</label>
           <label className="block"><span className="text-[13px] font-medium">Country</span><input name="country" defaultValue="India" autoComplete="country-name" className={field("country")} /></label>
         </div>

@@ -9,10 +9,10 @@ const TEST_ACCOUNTS = [
   { email: "student@arthroscopycollege.test", label: "Student", sub: "Applications dashboard" },
 ];
 
-export function LoginForm({ next, dev }: { next: string; dev: boolean }) {
+export function LoginForm({ next, dev, initialEmail = "" }: { next: string; dev: boolean; initialEmail?: string }) {
   const router = useRouter();
   const [step, setStep] = useState<"email" | "code">("email");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialEmail);
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
   const [devCode, setDevCode] = useState<string | undefined>();
   const [error, setError] = useState("");
