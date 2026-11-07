@@ -4,9 +4,10 @@ import { FAQS } from "@/lib/programs";
 import { VIDEOS } from "@/lib/videos";
 import { LiteYouTube } from "@/components/video/lite-youtube";
 import { HeroFilm } from "@/components/college/hero-film";
-import { Carousel } from "@/components/college/carousel";
 import { Reveal } from "@/components/college/reveal";
 import { Parallax } from "@/components/college/parallax";
+import { FilmTheatre } from "@/components/college/film-theatre";
+import { PhotoWall, COLLEGE_PHOTOS } from "@/components/college/photo-wall";
 import { ProgrammeShowcase } from "@/components/college/programme-showcase";
 
 /* Arthroscopy College: editorial, left-aligned, navy ink + teal accent. Film-led, generous whitespace. */
@@ -17,8 +18,8 @@ const titleOf = (id: string) => VIDEOS.find((v) => v.id === id)?.title ?? "Arthr
 const PROGRAMS = [
   { n: "01", t: "Fellowship in Arthroscopy", d: "One month in the OT. Knee, shoulder, ankle. 30–40 surgeries.", m: "1 month · Gurugram", href: "/programs/fellowship-in-arthroscopy", tags: ["Knee","Shoulder","Ankle","Arthrex certificate"], apply: "/apply?program=fellowship-in-arthroscopy", img: "/img/ot-2.webp" },
   { n: "02", t: "Next-Gen ACL Course", d: "Quad tendon, internal brace and LET, from portals to implants.", m: "5 days · monthly", href: "/programs/advance-acl-course", tags: ["Quad graft","FiberTape","LET","OT assistance"], apply: "/apply?program=advance-acl-course", img: "/img/ot-1.webp" },
-  { n: "03", t: "Physiotherapy Internship", d: "ACL rehabilitation with real patients, pre-op to return-to-sport.", m: "1 month · in clinic", href: "/programs/physiotherapy-internship", tags: ["Phase I–V rehab","Real patients","Certificate"], apply: "/apply?program=physiotherapy-internship", img: "/img/faculty-viraj.jpg" },
-  { n: "04", t: "ACL Rehab Workshop", d: "Two focused days for physiotherapists, with certification.", m: "2 days · weekend", href: "/programs/acl-rehab-workshop", tags: ["Assessment","Return-to-sport","Certificate"], apply: "/apply?program=acl-rehab-workshop", img: "/img/alumni-8.jpg" },
+  { n: "03", t: "Physiotherapy Internship", d: "ACL rehabilitation with real patients, pre-op to return-to-sport.", m: "1 month · in clinic", href: "/programs/physiotherapy-internship", tags: ["Phase I–V rehab","Real patients","Certificate"], apply: "/apply?program=physiotherapy-internship", img: "/img/team-1.jpg" },
+  { n: "04", t: "ACL Rehab Workshop", d: "Two focused days for physiotherapists, with certification.", m: "2 days · weekend", href: "/programs/acl-rehab-workshop", tags: ["Assessment","Return-to-sport","Certificate"], apply: "/apply?program=acl-rehab-workshop", img: "/img/clinic-1.jpg" },
 ];
 
 const TRUST = ["Arthrex Master Instructor", "Certificate from Arthrex", "30–40 surgeries every month", "Hands-on in the operating theatre", "Fellows from India and abroad", "Internal-brace specialists", "VR and model training"];
@@ -81,7 +82,7 @@ export default async function Home() {
 
       {/* Dr. Bora: dark feature with parallax portrait */}
       <section className="py-4 md:py-6">
-        <div className="mx-auto max-w-[1600px] px-3 md:px-6">
+        <div className="page">
           <div className="relative overflow-hidden rounded-[32px] bg-navy text-white md:rounded-[40px]">
             <div className="grid lg:grid-cols-[1.05fr_1fr]">
               <div className="relative z-10 flex flex-col justify-between gap-8 p-8 sm:p-10 lg:p-12 xl:p-14">
@@ -117,35 +118,27 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Films carousel, dark */}
-      <section className="bg-ink py-24 text-white md:py-32">
-        <div className="page mb-8 flex flex-wrap items-end justify-between gap-6">
-          <Reveal><h2 className="max-w-[18ch] text-[clamp(2rem,1.4rem+2vw,3.25rem)] font-semibold leading-[1.05] tracking-[-0.035em]">From the theatre, unedited.</h2></Reveal>
-          <Link href="/videos" className="text-[15px] font-semibold text-teal hover:underline">All {VIDEOS.length} films →</Link>
+      {/* Films: featured player + playlist */}
+      <section className="bg-ink py-16 text-white md:py-20">
+        <div className="page">
+          <div className="mb-8 flex flex-wrap items-end justify-between gap-6">
+            <Reveal>
+              <p className="flex items-center gap-3 text-[13px] font-medium uppercase tracking-[0.18em] text-teal"><span className="live-dot" />From the theatre</p>
+              <h2 className="mt-4 max-w-[20ch] text-[clamp(2rem,1.4rem+2vw,3.25rem)] font-semibold leading-[1.05] tracking-[-0.035em]">Real surgeries. Real fellows. Unedited.</h2>
+            </Reveal>
+            <Link href="/videos" className="inline-flex h-11 items-center rounded-full border border-white/25 px-5 text-[14px] font-semibold transition-colors hover:bg-white hover:text-ink">All {VIDEOS.length} films →</Link>
+          </div>
+          <Reveal delay={0.1}><FilmTheatre films={["gJz1rAvU0n4", ...HOME_FILMS].map((id) => ({ id, title: titleOf(id) }))} /></Reveal>
         </div>
-        <Carousel label="Fellowship films" dark itemClass="w-[82vw] sm:w-[480px]">
-          {HOME_FILMS.map((id) => (
-            <figure key={id}>
-              <LiteYouTube id={id} title={titleOf(id)} />
-              <figcaption className="mt-4 line-clamp-2 text-[16px] font-medium leading-snug text-white/85">{titleOf(id)}</figcaption>
-            </figure>
-          ))}
-        </Carousel>
       </section>
 
-      {/* Fellows carousel */}
-      <section className="py-16 md:py-20">
-        <div className="page mb-8 flex flex-wrap items-end justify-between gap-6">
-          <Reveal><h2 className="text-[clamp(2rem,1.4rem+2vw,3.25rem)] font-semibold tracking-[-0.035em]">Certified every month.</h2></Reveal>
-          <Link href="/gallery" className="text-[15px] font-semibold text-brand hover:underline">Gallery →</Link>
+      {/* Life at the college: real photos */}
+      <section className="page py-16 md:py-20">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-6">
+          <Reveal><h2 className="max-w-[18ch] text-[clamp(2rem,1.4rem+2vw,3.25rem)] font-semibold leading-[1.05] tracking-[-0.035em]">Certified every month, in person.</h2></Reveal>
+          <Link href="/gallery" className="text-[15px] font-semibold text-brand hover:underline">Full gallery →</Link>
         </div>
-        <Carousel label="Our fellows" itemClass="w-[64vw] sm:w-[300px]">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="relative aspect-[3/4] overflow-hidden rounded-[22px] bg-mist">
-              <Image src={`/img/alumni-${i}.jpg`} alt="Fellow receiving a certificate from Dr. Manu Bora" fill sizes="300px" className="object-cover" />
-            </div>
-          ))}
-        </Carousel>
+        <PhotoWall photos={COLLEGE_PHOTOS} />
       </section>
 
       {/* FAQ: two-column */}

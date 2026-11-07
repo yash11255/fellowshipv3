@@ -70,7 +70,7 @@ export const PROGRAMS: Program[] = [
     duration: "1 month",
     format: "Offline · in-clinic, Gurugram",
     fee: [],
-    image: "/img/faculty-viraj.jpg",
+    image: "/img/team-1.jpg",
     highlights: ["Real ACL patients, pre-op to return-to-sport", "Mentored by Dr. Viraj Pandya, Head Physiotherapist", "Phase I–V rehab protocols", "Certificate on completion"],
     curriculum: [
       { title: "Module 1", items: ["Anatomy, biomechanics & injury mechanism"] },
@@ -90,7 +90,7 @@ export const PROGRAMS: Program[] = [
     duration: "2 days · 10am–4pm",
     format: "Offline · Gurugram",
     fee: [{ label: "Workshop fee", amount: 6000 }],
-    image: "/img/faculty-viraj.jpg",
+    image: "/img/clinic-1.jpg",
     highlights: ["Led by Dr. Viraj Pandya & Dr. Astha Singh", "Physical & radiological assessment", "Return-to-sport testing protocol", "Certificate"],
     curriculum: [
       { title: "Day 1", items: ["Introduction & anatomy of the ACL", "Mode of injury", "Assessment: physical and radiological", "Prehab"] },

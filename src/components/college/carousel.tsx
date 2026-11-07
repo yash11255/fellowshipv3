@@ -16,7 +16,7 @@ export function Carousel({ children, label, itemClass = "w-[82vw] sm:w-[420px]",
   const btn = `grid size-11 place-items-center rounded-full border transition-colors disabled:opacity-30 ${dark ? "border-white/25 text-white hover:bg-white hover:text-ink" : "border-ink/15 text-ink hover:bg-ink hover:text-white"}`;
   return (
     <div aria-roledescription="carousel" aria-label={label}>
-      <ul ref={ref} className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-px-[var(--gutter)] px-[var(--gutter)] pb-2 [--gutter:16px] [scrollbar-width:none] md:[--gutter:32px] xl:[--gutter:max(48px,calc((100vw-96rem)/2+48px))] [&::-webkit-scrollbar]:hidden">
+      <ul ref={ref} className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-px-[var(--gutter)] px-[var(--gutter)] pb-2 [--gutter:16px] [scrollbar-width:none] md:[--gutter:32px] xl:[--gutter:max(48px,calc((100vw-96rem)/2+48px))] min-[1800px]:[--gutter:max(64px,calc((100vw-112rem)/2+64px))] [&::-webkit-scrollbar]:hidden">
         {Children.map(children, (c) => <li className={`shrink-0 snap-start ${itemClass}`}>{c}</li>)}
       </ul>
       <div className="page mt-8 flex items-center gap-6">

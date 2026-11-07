@@ -8,8 +8,8 @@ import { getSeo } from "@/lib/settings";
 import { Reveal } from "@/components/college/reveal";
 import { Parallax } from "@/components/college/parallax";
 import { Curriculum } from "@/components/college/curriculum";
-import { Carousel } from "@/components/college/carousel";
-import { LiteYouTube } from "@/components/video/lite-youtube";
+import { FilmTheatre } from "@/components/college/film-theatre";
+import { PhotoWall, COLLEGE_PHOTOS, type Photo } from "@/components/college/photo-wall";
 
 type P = PageProps<"/programs/[slug]">;
 export function generateStaticParams() { return PROGRAMS.map((p) => ({ slug: p.slug })); }
@@ -18,6 +18,17 @@ export async function generateMetadata({ params }: P): Promise<Metadata> {
   const p = getProgram((await params).slug);
   return p ? { title: p.title, description: p.short, alternates: { canonical: `/programs/${p.slug}` }, openGraph: { images: [p.image] } } : {};
 }
+
+const REHAB_PHOTOS: Photo[] = [
+  { src: "/img/team-2.jpg", alt: "Physiotherapist at Threads Physio", tall: true },
+  { src: "/img/clinic-1.jpg", alt: "Head physiotherapist at the clinic", wide: true },
+  { src: "/img/faculty-viraj.jpg", alt: "Dr. Viraj Pandya", tall: true },
+  { src: "/img/team-4.jpg", alt: "Physiotherapy team" },
+  { src: "/img/team-3.jpg", alt: "Physiotherapist" },
+  { src: "/img/team-1.jpg", alt: "Physiotherapist", tall: true },
+  { src: "/img/cert-1.jpg", alt: "Certificate ceremony", wide: true },
+  { src: "/img/cert-4.jpg", alt: "Completion certificate", tall: true },
+];
 
 const WA = "https://wa.me/919650620870?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20the%20program";
 
@@ -34,6 +45,7 @@ export default async function Program({ params }: P) {
   };
   const facts = [["Duration", p.duration], ["Format", p.format], ["For", p.audience], ...(p.schedule ? [["Runs", p.schedule]] : [])];
   const others = PROGRAMS.filter((o) => o.slug !== p.slug).slice(0, 3);
+  const films = FEATURED_VIDEOS.map((v) => ({ id: v.id, title: v.title }));
   const surgeon = !p.slug.includes("physio") && !p.slug.includes("rehab");
 
   return (
@@ -82,6 +94,12 @@ export default async function Program({ params }: P) {
             </Reveal>
           ))}
         </ul>
+      </section>
+
+      {/* Photos */}
+      <section className="page pb-16 md:pb-20">
+        <Reveal className="mb-8"><h2 className="text-[clamp(1.8rem,1.3rem+1.6vw,2.75rem)] font-semibold tracking-[-0.035em]">{surgeon ? "Inside the OT and on graduation day" : "Inside the clinic"}</h2></Reveal>
+        <PhotoWall photos={surgeon ? COLLEGE_PHOTOS.slice(0, 8) : REHAB_PHOTOS} />
       </section>
 
       {/* Curriculum */}
@@ -138,17 +156,15 @@ export default async function Program({ params }: P) {
       </section>
 
       {/* Films */}
-      {surgeon && (
-        <section className="bg-ink py-24 text-white md:py-32">
-          <div className="page mb-8 flex flex-wrap items-end justify-between gap-6">
-            <Reveal><h2 className="text-[clamp(2rem,1.4rem+2vw,3.25rem)] font-semibold tracking-[-0.035em]">Inside the programme</h2></Reveal>
+      <section className="bg-ink py-16 text-white md:py-20">
+        <div className="page">
+          <div className="mb-8 flex flex-wrap items-end justify-between gap-6">
+            <Reveal><h2 className="text-[clamp(2rem,1.4rem+2vw,3.25rem)] font-semibold tracking-[-0.035em]">See it before you join</h2></Reveal>
             <Link href="/videos" className="text-[15px] font-semibold text-teal hover:underline">All films →</Link>
           </div>
-          <Carousel label="Programme films" dark itemClass="w-[82vw] sm:w-[460px]">
-            {FEATURED_VIDEOS.map((v) => <figure key={v.id}><LiteYouTube id={v.id} title={v.title} /><figcaption className="mt-4 line-clamp-2 text-[16px] text-white/85">{v.title}</figcaption></figure>)}
-          </Carousel>
-        </section>
-      )}
+          <FilmTheatre films={films} />
+        </div>
+      </section>
 
       {/* FAQ */}
       {p.slug === "fellowship-in-arthroscopy" && (
