@@ -5,7 +5,7 @@ import { desc, eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { requireStaff } from "@/lib/admin";
 import { Card, PageHeader, dateTime } from "@/components/admin/ui";
-import { getProgram } from "@/lib/programs";
+import { getAllPrograms } from "@/lib/program-store";
 
 export const metadata = { title: "Applications" };
 
@@ -15,6 +15,7 @@ export default async function Applications({ searchParams }: PageProps<"/admin/a
   const sp = await searchParams;
   const f = typeof sp.status === "string" ? sp.status : "";
   const d = await db();
+  const progs = await getAllPrograms();
   const base = d.select().from(schema.applications);
   const rows = await (f ? base.where(eq(schema.applications.status, f as "new")) : base).orderBy(desc(schema.applications.createdAt)).limit(300);
   const all = await d.select({ s: schema.applications.status }).from(schema.applications);
@@ -36,7 +37,7 @@ export default async function Applications({ searchParams }: PageProps<"/admin/a
                 <tr key={a.id} className="hover:bg-[#fafafa]">
                   <td className="px-4 py-2.5"><Link href={`/admin/applications/${a.number}`} className="font-semibold hover:underline">{a.number}</Link><p className="text-[12px] text-grey">{dateTime(a.createdAt)}</p></td>
                   <td className="px-4 py-2.5"><p className="font-medium">{a.name}</p><p className="text-[12px] text-grey">{a.email} · {a.country}</p></td>
-                  <td className="px-4 py-2.5">{getProgram(a.programSlug)?.title ?? a.programSlug}</td>
+                  <td className="px-4 py-2.5">{progs.find((x) => x.slug === a.programSlug)?.title ?? a.programSlug}</td>
                   <td className="px-4 py-2.5 text-grey">{a.qualification}{a.experienceYears !== null ? ` · ${a.experienceYears} yrs` : ""}</td>
                   <td className="px-4 py-2.5"><span className={`rounded-full px-2 py-0.5 text-[12px] font-medium capitalize ${STATUS_BADGE[a.status]}`}>{a.status}</span></td>
                 </tr>

@@ -19,7 +19,10 @@ export async function generateMetadata({ params }: P): Promise<Metadata> {
   return {
     title: a.seoTitle || a.title, description: a.seoDescription || a.excerpt.slice(0, 160),
     alternates: { canonical: `/journal/${a.slug}` },
-    openGraph: { type: "article", title: a.title, description: a.excerpt.slice(0, 160), images: a.image ? [a.image] : [], publishedTime: a.publishedAt.toISOString(), authors: [a.author] },
+    keywords: [a.focusKeyword, ...a.tags].filter((x): x is string => !!x),
+    authors: [{ name: a.author }],
+    openGraph: { type: "article", title: a.seoTitle || a.title, description: a.seoDescription || a.excerpt.slice(0, 160), images: a.image ? [{ url: a.image, alt: a.title }] : [], publishedTime: a.publishedAt.toISOString(), modifiedTime: a.updatedAt.toISOString(), authors: [a.author], tags: a.tags },
+    twitter: { card: "summary_large_image", title: a.seoTitle || a.title, description: a.seoDescription || a.excerpt.slice(0, 160), images: a.image ? [a.image] : [] },
   };
 }
 
@@ -29,7 +32,7 @@ async function Article({ params }: { params: P["params"] }) {
   if (!a) notFound();
   const { siteUrl } = await getSeo();
   const more = (await getArticles(4)).filter((x) => x.slug !== slug).slice(0, 3);
-  const ld = { "@context": "https://schema.org", "@type": "Article", headline: a.title, image: a.image ? [`${siteUrl}${a.image}`] : undefined, datePublished: a.publishedAt.toISOString(), dateModified: a.updatedAt.toISOString(), author: { "@type": "Person", name: a.author }, publisher: { "@type": "Organization", name: "Arthroscopy College" }, mainEntityOfPage: `${siteUrl}/journal/${a.slug}` };
+  const ld = { "@context": "https://schema.org", "@type": "Article", headline: a.title, image: a.image ? [`${siteUrl}${a.image}`] : undefined, datePublished: a.publishedAt.toISOString(), dateModified: a.updatedAt.toISOString(), author: { "@type": "Person", name: a.author }, publisher: { "@type": "Organization", name: "Arthroscopy College", logo: { "@type": "ImageObject", url: `${siteUrl}/brand/logo.jpg` } }, keywords: [a.focusKeyword, ...a.tags].filter(Boolean).join(", ") || undefined, wordCount: a.body.replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length, mainEntityOfPage: `${siteUrl}/journal/${a.slug}` };
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />

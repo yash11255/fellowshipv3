@@ -7,8 +7,11 @@ import clsx from "clsx";
 const items = [
   { href: "/admin", label: "Dashboard", d: "M4 13h6V4H4zM14 20h6v-9h-6zM4 20h6v-4H4zM14 4v4h6V4z" },
   { href: "/admin/applications", label: "Applications", d: "M8 4h8l3 3v13H5V4h3zM8 11h8M8 15h5" },
+  { href: "/admin/programs", label: "Programmes", d: "M4 6h16M4 12h16M4 18h10" },
+  { href: "/admin/blog", label: "Blog", d: "M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4" },
+  { href: "/admin/seo", label: "SEO", d: "M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4M8 11l2 2 4-4" },
   { href: "/admin/customers", label: "Students", d: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" },
-  { href: "/admin/content", label: "Content", d: "M5 4h10l4 4v12H5zM15 4v4h4M8 12h8M8 16h6" },
+  { href: "/admin/content", label: "Pages", d: "M5 4h10l4 4v12H5zM15 4v4h4M8 12h8M8 16h6" },
   { href: "/admin/inbox", label: "Enquiries", d: "M3 13l3-8h12l3 8v6H3zM3 13h5l1 2h6l1-2h5" },
   { href: "/admin/staff", label: "Staff", d: "M16 11a4 4 0 1 0-8 0M4 21c1-4 4-6 8-6s7 2 8 6M19 8v4M17 10h4" },
   { href: "/admin/settings", label: "Settings", d: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" },

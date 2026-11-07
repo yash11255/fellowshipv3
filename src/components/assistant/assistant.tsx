@@ -5,10 +5,11 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useSearchIndex } from "@/components/search/use-search-index";
 import { respond, START_CHIPS, WHATSAPP, type Reply } from "@/lib/assistant";
+import type { Program } from "@/lib/programs";
 
 type Msg = { from: "bot" | "me"; reply?: Reply; text?: string; id: number };
 
-export function Assistant() {
+export function Assistant({ programs }: { programs: Program[] }) {
   const reduce = useReducedMotion();
   const [open, setOpen] = useState(false);
   const items = useSearchIndex(open);
@@ -26,7 +27,7 @@ export function Assistant() {
     setText("");
     setMsgs((m) => [...m, { from: "me", text: q, id: idRef.current++ }]);
     setTyping(true);
-    setTimeout(() => { setMsgs((m) => [...m, { from: "bot", id: idRef.current++, reply: respond(q, items ?? []) }]); setTyping(false); }, reduce ? 0 : 400);
+    setTimeout(() => { setMsgs((m) => [...m, { from: "bot", id: idRef.current++, reply: respond(q, items ?? [], programs) }]); setTyping(false); }, reduce ? 0 : 400);
   };
 
   return (

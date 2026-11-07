@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, schema } from "@/db";
-import { getProgram, inr } from "@/lib/programs";
+import { inr } from "@/lib/programs";
+import { getProgramBySlug } from "@/lib/program-store";
 import { PayButton } from "@/components/apply/pay-button";
 
 export const metadata: Metadata = { title: "Pay fee", robots: { index: false } };
@@ -15,7 +16,7 @@ async function Pay({ params }: { params: PageProps<"/pay/[token]">["params"] }) 
   if (!/^[\w-]{16,64}$/.test(token)) notFound();
   const [a] = await (await db()).select().from(schema.applications).where(eq(schema.applications.paymentToken, token)).limit(1);
   if (!a) notFound();
-  const p = getProgram(a.programSlug);
+  const p = await getProgramBySlug(a.programSlug);
   const total = Math.round((a.feeAmount ?? 0) * (1 + a.gstRate / 100));
   return (
     <div className="mx-auto max-w-xl rounded-[32px] border border-ink/10 p-6 sm:p-10">

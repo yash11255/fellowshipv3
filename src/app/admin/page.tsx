@@ -4,7 +4,7 @@ import { desc, gte } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { Card, PageHeader, dateTime, inr } from "@/components/admin/ui";
 import { requireStaff } from "@/lib/admin";
-import { PROGRAMS } from "@/lib/programs";
+import { getAllPrograms } from "@/lib/program-store";
 import { STATUS_BADGE } from "@/lib/application-status";
 
 export const metadata = { title: "Dashboard" };
@@ -28,7 +28,8 @@ export default async function Dashboard() {
     ["Fees collected", inr(collected), "Last 30 days", "/admin/applications?status=paid"],
     ["Open enquiries", String(open.length), "Contact form, last 30 days", "/admin/inbox"],
   ];
-  const byProgram = PROGRAMS.map((p) => ({ p, count: recent.filter((a) => a.programSlug === p.slug).length }));
+  const all = await getAllPrograms();
+  const byProgram = all.map((p) => ({ p, count: recent.filter((a) => a.programSlug === p.slug).length }));
   const max = Math.max(1, ...byProgram.map((b) => b.count));
 
   return (
@@ -52,7 +53,7 @@ export default async function Dashboard() {
                 <tr key={a.id} className="hover:bg-[#fafafa]">
                   <td className="px-4 py-2.5 font-semibold"><Link href={`/admin/applications/${a.number}`} className="hover:underline">{a.number}</Link></td>
                   <td className="px-4 py-2.5">{a.name}</td>
-                  <td className="hidden px-4 py-2.5 text-grey md:table-cell">{PROGRAMS.find((p) => p.slug === a.programSlug)?.title ?? a.programSlug}</td>
+                  <td className="hidden px-4 py-2.5 text-grey md:table-cell">{all.find((p) => p.slug === a.programSlug)?.title ?? a.programSlug}</td>
                   <td className="hidden px-4 py-2.5 text-grey sm:table-cell">{dateTime(a.createdAt)}</td>
                   <td className="px-4 py-2.5"><span className={`rounded-full px-2 py-0.5 text-[12px] font-medium capitalize ${STATUS_BADGE[a.status]}`}>{a.status}</span></td>
                 </tr>

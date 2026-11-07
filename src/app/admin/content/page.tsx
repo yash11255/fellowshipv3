@@ -5,12 +5,12 @@ import { db, schema } from "@/db";
 import { requireStaff } from "@/lib/admin";
 import { Card, PageHeader, shortDate } from "@/components/admin/ui";
 
-export const metadata = { title: "Content" };
+export const metadata = { title: "Pages" };
 
 export default async function Content({ searchParams }: PageProps<"/admin/content">) {
   await connection();
   await requireStaff("content");
-  const tab = (await searchParams).tab === "journal" ? "journal" : "pages";
+  const tab = "pages" as "pages" | "journal"; void searchParams;
   const d = await db();
   const rows = tab === "pages"
     ? (await d.select().from(schema.pages).orderBy(asc(schema.pages.slug))).map((p) => ({ slug: p.slug, title: p.title, published: p.published, date: p.updatedAt, href: `/${p.slug}` }))
@@ -18,11 +18,8 @@ export default async function Content({ searchParams }: PageProps<"/admin/conten
   const kind = tab === "pages" ? "page" : "article";
   return (
     <>
-      <PageHeader title="Content" sub="Pages, policies, clinic services and the journal"
+      <PageHeader title="Pages" sub="Legal pages and other standalone pages. Blog posts live under Blog."
         actions={<Link href={`/admin/content/edit?kind=${kind}`} className="inline-flex h-8 items-center rounded-lg bg-[#303030] px-3 text-[13px] font-medium text-white">{tab === "pages" ? "New page" : "New article"}</Link>} />
-      <div className="mb-3 flex gap-1">
-        {[["pages", "Pages"], ["journal", "Journal"]].map(([k, l]) => <Link key={k} href={`/admin/content?tab=${k}`} className={`rounded-lg px-3 py-1.5 text-[13px] ${tab === k ? "bg-[#ebebeb] font-semibold" : "text-[#4a4a4a]"}`}>{l}</Link>)}
-      </div>
       <Card>
         <ul className="divide-y divide-[#f0f0f0]">
           {rows.map((r) => (

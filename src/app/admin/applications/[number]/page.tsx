@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { requireStaff } from "@/lib/admin";
 import { Card, dateTime, inr } from "@/components/admin/ui";
-import { getProgram } from "@/lib/programs";
+import { getProgramBySlug } from "@/lib/program-store";
 import { ApplicationDecision } from "@/components/admin/application-decision";
 import { STATUS_BADGE } from "@/lib/application-status";
 
@@ -15,7 +15,7 @@ export default async function Application({ params }: PageProps<"/admin/applicat
   const { number } = await params;
   const [a] = await (await db()).select().from(schema.applications).where(eq(schema.applications.number, number)).limit(1);
   if (!a) notFound();
-  const p = getProgram(a.programSlug);
+  const p = await getProgramBySlug(a.programSlug);
   const intl = !/^india$/i.test(a.country.trim());
   const defaultFee = a.feeAmount ?? (p?.fee.length ? (intl && p.fee[1] ? p.fee[1].amount : p.fee[0].amount) : null);
   const base = process.env.SITE_URL ?? "http://localhost:3200";

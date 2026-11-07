@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { Suspense } from "react";
-import { PROGRAMS } from "@/lib/programs";
+import { getPrograms } from "@/lib/program-store";
 import { ApplyForm } from "@/components/apply/apply-form";
 
 export const metadata: Metadata = { title: "Apply", description: "Apply for the Fellowship in Arthroscopy, Next-Gen ACL course or Physiotherapy internship at Arthroscopy College.", alternates: { canonical: "/apply" } };
@@ -10,6 +10,7 @@ const STEPS = [["Apply", "3-minute form, no payment"], ["Review", "Coordinator c
 
 async function Form({ searchParams }: { searchParams: PageProps<"/apply">["searchParams"] }) {
   const sp = await searchParams;
+  const PROGRAMS = await getPrograms();
   const initial = typeof sp.program === "string" && PROGRAMS.some((p) => p.slug === sp.program) ? sp.program : undefined;
   return <ApplyForm programs={PROGRAMS.map((p) => ({ slug: p.slug, title: p.title, audience: p.audience }))} initial={initial} />;
 }

@@ -23,3 +23,8 @@
 - Logo as SVG / high-res PNG (current one is 300×120 JPG).
 - Arthrex animation video links (the old homepage row) if you want them on the site.
 - More recent OT / fellowship photos.
+
+## Admin notes
+- **Image uploads** (Blog / Programmes → Upload) save to `public/uploads/` on the server's disk. That works on a VPS; on Vercel/serverless switch to object storage (Cloudflare R2, S3 or Vercel Blob) before launch.
+- **Fresh database setup:** `npm run db:push`, then `node scripts/migrate-0007-seo.mjs`, `node scripts/migrate-0008-programs.mjs`, then `npm run db:seed` (programmes, blog import, legal pages).
+- Stop the dev server cleanly (Ctrl+C) — the embedded dev database can corrupt if the process is killed.

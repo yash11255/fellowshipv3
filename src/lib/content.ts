@@ -1,6 +1,6 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
-import { and, desc, eq, like } from "drizzle-orm";
+import { and, desc, eq, like, lte } from "drizzle-orm";
 import { db, schema } from "@/db";
 
 export const CONTENT_TAG = "content";
@@ -24,15 +24,15 @@ export async function getPagesUnder(prefix: string) {
 export async function getArticles(limit = 100) {
   "use cache";
   cacheTag(CONTENT_TAG);
-  cacheLife("hours");
+  cacheLife("minutes"); // short, so scheduled posts appear on time
   return (await db()).select({ slug: schema.articles.slug, title: schema.articles.title, excerpt: schema.articles.excerpt, image: schema.articles.image, publishedAt: schema.articles.publishedAt, author: schema.articles.author })
-    .from(schema.articles).where(eq(schema.articles.published, true)).orderBy(desc(schema.articles.publishedAt)).limit(limit);
+    .from(schema.articles).where(and(eq(schema.articles.published, true), lte(schema.articles.publishedAt, new Date()))).orderBy(desc(schema.articles.publishedAt)).limit(limit);
 }
 
 export async function getArticle(slug: string) {
   "use cache";
   cacheTag(CONTENT_TAG);
-  cacheLife("hours");
-  const [a] = await (await db()).select().from(schema.articles).where(and(eq(schema.articles.slug, slug), eq(schema.articles.published, true))).limit(1);
+  cacheLife("minutes");
+  const [a] = await (await db()).select().from(schema.articles).where(and(eq(schema.articles.slug, slug), eq(schema.articles.published, true), lte(schema.articles.publishedAt, new Date()))).limit(1);
   return a ?? null;
 }

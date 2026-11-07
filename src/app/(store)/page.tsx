@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FAQS } from "@/lib/programs";
+import { getPrograms } from "@/lib/program-store";
 import { VIDEOS } from "@/lib/videos";
 import { LiteYouTube } from "@/components/video/lite-youtube";
 import { HeroFilm } from "@/components/college/hero-film";
@@ -15,16 +16,13 @@ import { ProgrammeShowcase } from "@/components/college/programme-showcase";
 const HOME_FILMS = ["twcQl-uuEqI", "z4kEsuu2lJg", "xeT3dADPSwk", "41ohFGiW_ak", "QILsw563Qss", "kAW51rVWYGA", "R_-23ZdG5h4"];
 const titleOf = (id: string) => VIDEOS.find((v) => v.id === id)?.title ?? "Arthroscopy College";
 
-const PROGRAMS = [
-  { n: "01", t: "Fellowship in Arthroscopy", d: "One month in the OT. Knee, shoulder, ankle. 30–40 surgeries.", m: "1 month · Gurugram", href: "/programs/fellowship-in-arthroscopy", tags: ["Knee","Shoulder","Ankle","Arthrex certificate"], apply: "/apply?program=fellowship-in-arthroscopy", img: "/img/ot-2.webp" },
-  { n: "02", t: "Next-Gen ACL Course", d: "Quad tendon, internal brace and LET, from portals to implants.", m: "5 days · monthly", href: "/programs/advance-acl-course", tags: ["Quad graft","FiberTape","LET","OT assistance"], apply: "/apply?program=advance-acl-course", img: "/img/ot-1.webp" },
-  { n: "03", t: "Physiotherapy Internship", d: "ACL rehabilitation with real patients, pre-op to return-to-sport.", m: "1 month · in clinic", href: "/programs/physiotherapy-internship", tags: ["Phase I–V rehab","Real patients","Certificate"], apply: "/apply?program=physiotherapy-internship", img: "/img/team-1.jpg" },
-  { n: "04", t: "ACL Rehab Workshop", d: "Two focused days for physiotherapists, with certification.", m: "2 days · weekend", href: "/programs/acl-rehab-workshop", tags: ["Assessment","Return-to-sport","Certificate"], apply: "/apply?program=acl-rehab-workshop", img: "/img/clinic-1.jpg" },
-];
 
 const TRUST = ["Arthrex Master Instructor", "Certificate from Arthrex", "30–40 surgeries every month", "Hands-on in the operating theatre", "Fellows from India and abroad", "Internal-brace specialists", "VR and model training"];
 
 export default async function Home() {
+  const showcase = (await getPrograms()).filter((p) => p.card).slice(0, 4).map((p, i) => ({
+    n: String(i + 1).padStart(2, "0"), t: p.card!.name, d: p.card!.line, m: p.card!.meta, tags: p.card!.tags, href: `/programs/${p.slug}`, apply: `/apply?program=${p.slug}`, img: p.image,
+  }));
   return (
     <div className="bg-white text-ink">
       {/* Hero: the original site's film, full bleed */}
@@ -76,7 +74,7 @@ export default async function Home() {
             <h2 className="max-w-[14ch] text-[clamp(2.2rem,1.4rem+2.6vw,3.75rem)] font-semibold leading-[1.02] tracking-[-0.04em]">Four ways to train with us.</h2>
             <Link href="/programs" className="text-[15px] font-semibold text-brand hover:underline">Compare all programmes →</Link>
           </Reveal>
-          <Reveal delay={0.1}><ProgrammeShowcase items={PROGRAMS} /></Reveal>
+          <Reveal delay={0.1}><ProgrammeShowcase items={showcase} /></Reveal>
         </div>
       </section>
 

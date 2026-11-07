@@ -8,7 +8,8 @@ import { db, schema } from "@/db";
 import { currentUser } from "./auth";
 import { requireStaff } from "./admin";
 import { sendEmail } from "./email";
-import { getProgram, inr } from "./programs";
+import { inr } from "./programs";
+import { getProgramBySlug } from "./program-store";
 import { createRazorpayOrder, razorpayEnabled, verifyPaymentSignature } from "./razorpay";
 
 const PHONE = /^\+?[0-9][0-9\s-]{7,15}$/;
@@ -30,7 +31,7 @@ const Apply = z.object({
 export async function submitApplication(raw: z.input<typeof Apply>) {
   const p = Apply.safeParse(raw);
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message, field: p.error.issues[0].path.join(".") };
-  const program = getProgram(p.data.programSlug);
+  const program = await getProgramBySlug(p.data.programSlug);
   if (!program) return { ok: false as const, error: "Choose a program.", field: "programSlug" };
   const d = await db();
   const email = p.data.email.toLowerCase();
@@ -73,7 +74,7 @@ export async function decideApplication(raw: z.input<typeof Decide>) {
   const d = await db();
   const [a] = await d.select().from(schema.applications).where(eq(schema.applications.id, p.id)).limit(1);
   if (!a) return { ok: false as const, error: "Not found" };
-  const program = getProgram(a.programSlug);
+  const program = await getProgramBySlug(a.programSlug);
   const base = process.env.SITE_URL ?? "http://localhost:3200";
   const patch: Partial<typeof schema.applications.$inferInsert> = { status: p.status, updatedAt: new Date(), cohort: p.cohort ?? a.cohort, staffNote: p.staffNote ?? a.staffNote };
 

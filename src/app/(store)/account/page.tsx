@@ -7,7 +7,8 @@ import { desc, eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { currentUser } from "@/lib/auth";
 import { logout } from "@/lib/auth-actions";
-import { PROGRAMS, inr } from "@/lib/programs";
+import { inr, type Program } from "@/lib/programs";
+import { getAllPrograms } from "@/lib/program-store";
 import { FEATURED_VIDEOS } from "@/lib/videos";
 import { LiteYouTube } from "@/components/video/lite-youtube";
 
@@ -48,8 +49,7 @@ function NextStep({ a }: { a: App }) {
   );
 }
 
-function AppCard({ a }: { a: App }) {
-  const p = PROGRAMS.find((x) => x.slug === a.programSlug);
+function AppCard({ a, p }: { a: App; p?: Program }) {
   const stage = STAGE[a.status];
   const total = a.feeAmount ? Math.round(a.feeAmount * (1 + a.gstRate / 100)) : null;
   return (
@@ -97,6 +97,7 @@ async function Dashboard() {
   const user = await currentUser();
   if (!user) redirect("/login?next=/account");
   const apps = await (await db()).select().from(schema.applications).where(eq(schema.applications.email, user.email.toLowerCase())).orderBy(desc(schema.applications.createdAt));
+  const all = await getAllPrograms();
   const first = apps[0]?.name.split(" ")[0];
   const enrolled = apps.some((a) => a.status === "paid" || a.status === "enrolled");
   return (
@@ -121,7 +122,7 @@ async function Dashboard() {
           </div>
           <div className="relative min-h-[220px]"><Image src="/img/cert-1.jpg" alt="" fill sizes="50vw" className="object-cover" /></div>
         </div>
-      ) : <div className="mt-10 space-y-6">{apps.map((a) => <AppCard key={a.id} a={a} />)}</div>}
+      ) : <div className="mt-10 space-y-6">{apps.map((a) => <AppCard key={a.id} a={a} p={all.find((x) => x.slug === a.programSlug)} />)}</div>}
 
       <section className="mt-12 grid gap-4 md:grid-cols-3">
         <div className="rounded-[28px] bg-mist p-7 md:col-span-1">

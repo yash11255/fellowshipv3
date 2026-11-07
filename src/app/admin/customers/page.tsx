@@ -4,7 +4,7 @@ import { desc } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { Card, PageHeader, shortDate } from "@/components/admin/ui";
 import { requireStaff } from "@/lib/admin";
-import { PROGRAMS } from "@/lib/programs";
+import { getAllPrograms } from "@/lib/program-store";
 
 export const metadata = { title: "Students" };
 
@@ -18,7 +18,8 @@ export default async function Students({ searchParams }: PageProps<"/admin/custo
   const by = new Map<string, typeof apps>();
   for (const a of apps) by.set(a.email, [...(by.get(a.email) ?? []), a]);
   const rows = [...by].filter(([e, l]) => !q || e.includes(q) || l[0].name.toLowerCase().includes(q) || l[0].phone.includes(q));
-  const title = (s: string) => PROGRAMS.find((p) => p.slug === s)?.title ?? s;
+  const all = await getAllPrograms();
+  const title = (s: string) => all.find((p) => p.slug === s)?.title ?? s;
   return (
     <>
       <PageHeader title="Students" sub={`${by.size} people have applied`} actions={<Link href="/admin/export/applications" className="rounded-md border border-[#d4d4d4] bg-white px-3 py-1.5 text-[13px] font-medium hover:bg-[#f6f6f6]">Export CSV</Link>} />

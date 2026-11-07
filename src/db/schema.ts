@@ -171,6 +171,7 @@ export const articles = pgTable("articles", {
   image: text("image"),
   author: text("author").notNull().default("Dr. Manu Bora"),
   tags: jsonb("tags").$type<string[]>().notNull().default([]),
+  focusKeyword: text("focus_keyword"),           // SEO: the main search phrase this post targets
   seoTitle: text("seo_title"),
   seoDescription: text("seo_description"),
   published: boolean("published").notNull().default(true),
@@ -250,3 +251,12 @@ export const applications = pgTable("applications", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [index("applications_email").on(t.email), index("applications_status").on(t.status)]);
+
+// ── Programmes (editable in Admin → Programmes; seeded from src/lib/programs.ts) ──
+export const programs = pgTable("programs", {
+  slug: text("slug").primaryKey(),
+  data: jsonb("data").$type<import("@/lib/programs").Program>().notNull(),
+  position: integer("position").notNull().default(0),
+  published: boolean("published").notNull().default(true),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});

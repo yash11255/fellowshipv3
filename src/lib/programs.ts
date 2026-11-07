@@ -1,3 +1,4 @@
+// Default programme content (seeded into the DB; edit live in Admin → Programmes).
 // Programs offered by Arthroscopy College. Source: arthroscopycollege.com (Fellowship Details, Physiotherapy Internship,
 // homepage, course posters). Fees marked `confirm` conflict or are missing on the old site.
 
@@ -17,6 +18,9 @@ export type Program = {
   outcomes: string[];
   eligibility: string[];
   confirm?: string;                                           // data the owner must verify
+  nextDates?: string[];                                       // upcoming batches, e.g. "10–14 Dec 2026"
+  card?: { name: string; line: string; meta: string; tags: string[] }; // homepage showcase
+  gallery?: string[];                                         // extra photos on the programme page
 };
 
 export const PROGRAMS: Program[] = [
@@ -42,6 +46,7 @@ export const PROGRAMS: Program[] = [
     outcomes: ["International-standard arthroscopic technique", "Case discussions and active involvement in surgery", "Confidence to perform internal-brace procedures independently"],
     eligibility: ["Orthopaedic surgeons who have just completed PG (MS / DNB Ortho)", "Practising orthopaedic surgeons upskilling in knee, shoulder and ankle arthroscopy"],
     confirm: "Old site lists ₹1,50,000 on Fellowship Details but ₹1,00,000 in the homepage FAQ.",
+    card: { name: "Fellowship in Arthroscopy", line: "One month in the OT. Knee, shoulder, ankle. 30\u201340 surgeries.", meta: "1 month \u00b7 Gurugram", tags: ["Knee", "Shoulder", "Ankle", "Arthrex certificate"] },
   },
   {
     slug: "advance-acl-course",
@@ -61,6 +66,7 @@ export const PROGRAMS: Program[] = [
     outcomes: ["Perform modern ACL reconstruction with internal brace", "Choose grafts and implants confidently", "Manage meniscus and cartilage lesions"],
     eligibility: ["Orthopaedic surgeons", "Orthopaedic fellows and residents"],
     confirm: "Only the early-bird fee (₹50,000) is published. Confirm regular fee and next dates.",
+    card: { name: "Next-Gen ACL Course", line: "Quad tendon, internal brace and LET, from portals to implants.", meta: "5 days \u00b7 monthly", tags: ["Quad graft", "FiberTape", "LET", "OT assistance"] },
   },
   {
     slug: "physiotherapy-internship",
@@ -81,6 +87,7 @@ export const PROGRAMS: Program[] = [
     outcomes: ["Plan and progress ACL rehab independently", "Run return-to-sport testing", "Communicate with the surgical team"],
     eligibility: ["MSK and sports physiotherapists", "Final-year physiotherapy students", "Athletes and athletic coaches"],
     confirm: "Fee not published on the old site.",
+    card: { name: "Physiotherapy Internship", line: "ACL rehabilitation with real patients, pre-op to return-to-sport.", meta: "1 month \u00b7 in clinic", tags: ["Phase I–V rehab", "Real patients", "Certificate"] },
   },
   {
     slug: "acl-rehab-workshop",
@@ -99,6 +106,7 @@ export const PROGRAMS: Program[] = [
     outcomes: ["Structured ACL assessment", "Evidence-based prehab and rehab plans"],
     eligibility: ["Physiotherapists", "Physiotherapy students"],
     confirm: "Poster lists 29 Nov 2025. Confirm upcoming dates.",
+    card: { name: "ACL Rehab Workshop", line: "Two focused days for physiotherapists, with certification.", meta: "2 days \u00b7 weekend", tags: ["Assessment", "Return-to-sport", "Certificate"] },
   },
   {
     slug: "online-fellowship",
@@ -114,6 +122,7 @@ export const PROGRAMS: Program[] = [
     outcomes: ["Strong conceptual foundation before hands-on training"],
     eligibility: ["Orthopaedic surgeons and residents"],
     confirm: "Old site only links to an application. Add syllabus, duration and fee.",
+    card: { name: "Online Fellowship", line: "Recorded surgeries, technique breakdowns and case discussions.", meta: "Self-paced \u00b7 online", tags: ["Recorded surgeries", "Case discussions"] },
   },
 ];
 

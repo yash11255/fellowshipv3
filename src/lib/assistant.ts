@@ -1,5 +1,5 @@
-// Rule-based admissions assistant (client-safe). Facts come from PROGRAMS/FAQS; anything else falls back to site search.
-import { PROGRAMS, inr } from "./programs";
+// Rule-based admissions assistant (client-safe). Facts come from the live programme list; anything else falls back to site search.
+import { inr, type Program } from "./programs";
 import { norm, search, type SearchItem } from "./search";
 
 export type Reply = { text: string; results?: SearchItem[]; links?: { label: string; href: string }[]; chips?: string[] };
@@ -7,8 +7,6 @@ export type Reply = { text: string; results?: SearchItem[]; links?: { label: str
 export const WHATSAPP = "https://wa.me/919650620870?text=Hi%2C%20I%20have%20a%20question%20about%20Arthroscopy%20College";
 export const START_CHIPS = ["Fellowship fee", "Programme duration", "Who can apply?", "How do I apply?", "Where is it?", "Talk to a human"];
 
-const P = (slug: string) => PROGRAMS.find((p) => p.slug === slug)!;
-const feeLine = (slug: string) => { const p = P(slug); return p.fee.length ? p.fee.map((f) => `${f.label}: ${inr(f.amount)}${f.note ? ` ${f.note}` : ""}`).join("; ") : "shared by our coordinator after you apply"; };
 
 function which(q: string) {
   if (/acl course|next gen|nextgen|5 day|five day|quad|let\b/.test(q)) return "advance-acl-course";
@@ -19,7 +17,9 @@ function which(q: string) {
   return null;
 }
 
-export function respond(input: string, items: SearchItem[]): Reply {
+export function respond(input: string, items: SearchItem[], PROGRAMS: Program[]): Reply {
+  const P = (slug: string) => PROGRAMS.find((p) => p.slug === slug);
+  const feeLine = (slug: string) => { const p = P(slug); if (!p || !p.fee.length) return "shared by our coordinator after you apply"; return p.fee.map((f) => `${f.label}: ${inr(f.amount)}${f.note ? ` ${f.note}` : ""}`).join("; "); };
   const q = norm(input);
   const has = (re: RegExp) => re.test(q);
   const slug = which(q);
@@ -47,7 +47,7 @@ export function respond(input: string, items: SearchItem[]): Reply {
   if (has(/hands on|observ|operate|surgery|ot\b|theatre|cadaver|live/)) return { text: "Training is hands-on. Fellows scrub in for 30–40 surgeries a month with Dr. Manu Bora, plus knee and shoulder model training and VR sessions.", links: [{ label: "Watch from the theatre", href: "/videos" }] };
   if (has(/where|location|address|city|gurgaon|gurugram|stay|hostel|accommodation|hotel/)) return { text: "Training happens in Gurugram, Haryana (Orthosport & Threads Physio, Golf Course Road, DLF Phase 1, Sector 27). For accommodation help, ask our team on WhatsApp.", links: [{ label: "Contact & map", href: "/contact-us" }, { label: "WhatsApp us", href: WHATSAPP }] };
   if (has(/procedure|learn|curriculum|syllabus|cover|topics/)) {
-    const p = prog ?? P("fellowship-in-arthroscopy");
+    const p = prog ?? P("fellowship-in-arthroscopy") ?? PROGRAMS[0];
     return { text: `${p.title} covers: ${p.curriculum.map((c) => `${c.title} (${c.items.slice(0, 3).join(", ")}${c.items.length > 3 ? "…" : ""})`).join("; ")}.`, links: progLinks(p.slug) };
   }
   if (has(/dr|doctor|manu|bora|faculty|mentor|teacher/)) return { text: "Programmes are led by Dr. Manu Bora, orthopaedic and arthroscopy surgeon and Arthrex Master Instructor. Physiotherapy programmes are led by Dr. Viraj Pandya, Head Physiotherapist at Threads Physio.", links: [{ label: "Meet Dr. Bora", href: "/dr-manu-bora" }] };

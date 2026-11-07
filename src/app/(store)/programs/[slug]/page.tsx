@@ -3,7 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { PROGRAMS, getProgram, inr, FAQS } from "@/lib/programs";
+import { PROGRAMS, inr, FAQS } from "@/lib/programs";
+import { getPrograms, getProgramBySlug } from "@/lib/program-store";
 import { FEATURED_VIDEOS } from "@/lib/videos";
 import { getSeo } from "@/lib/settings";
 import { Reveal } from "@/components/college/reveal";
@@ -16,7 +17,7 @@ type P = PageProps<"/programs/[slug]">;
 export function generateStaticParams() { return PROGRAMS.map((p) => ({ slug: p.slug })); }
 
 export async function generateMetadata({ params }: P): Promise<Metadata> {
-  const p = getProgram((await params).slug);
+  const p = await getProgramBySlug((await params).slug);
   return p ? { title: p.title, description: p.short, alternates: { canonical: `/programs/${p.slug}` }, openGraph: { images: [p.image] } } : {};
 }
 
@@ -34,8 +35,8 @@ const REHAB_PHOTOS: Photo[] = [
 const WA = "https://wa.me/919650620870?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20the%20program";
 
 async function ProgramBody({ params }: { params: P["params"] }) {
-  const p = getProgram((await params).slug);
-  if (!p) notFound();
+  const p = await getProgramBySlug((await params).slug);
+  if (!p || !p.published) notFound();
   const { siteUrl } = await getSeo();
   const apply = `/apply?program=${p.slug}`;
   const ld = {
@@ -45,7 +46,7 @@ async function ProgramBody({ params }: { params: P["params"] }) {
     hasCourseInstance: { "@type": "CourseInstance", courseMode: p.format.startsWith("Online") ? "online" : "onsite", location: "Gurugram, Haryana, India", courseWorkload: p.duration },
   };
   const facts = [["Duration", p.duration], ["Format", p.format], ["For", p.audience], ...(p.schedule ? [["Runs", p.schedule]] : [])];
-  const others = PROGRAMS.filter((o) => o.slug !== p.slug).slice(0, 3);
+  const others = (await getPrograms()).filter((o) => o.slug !== p.slug).slice(0, 3);
   const films = FEATURED_VIDEOS.map((v) => ({ id: v.id, title: v.title }));
   const surgeon = !p.slug.includes("physio") && !p.slug.includes("rehab");
 
@@ -63,6 +64,12 @@ async function ProgramBody({ params }: { params: P["params"] }) {
             <Link href={apply} className="inline-flex h-13 items-center rounded-full bg-ink px-7 text-[15px] font-semibold text-white transition-colors hover:bg-brand">Apply now</Link>
             <a href={WA} target="_blank" rel="noopener noreferrer" className="inline-flex h-13 items-center rounded-full border border-ink/15 px-7 text-[15px] font-medium transition-colors hover:border-ink">Ask on WhatsApp</a>
           </div>
+          {p.nextDates && p.nextDates.length > 0 && (
+            <div className="mt-8 flex flex-wrap items-center gap-2">
+              <span className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.14em] text-ink/50"><span className="live-dot" />Next batches</span>
+              {p.nextDates.map((d) => <span key={d} className="rounded-full bg-mist px-3 py-1 text-[14px] font-semibold">{d}</span>)}
+            </div>
+          )}
         </Reveal>
         <Reveal delay={0.1}>
           <Parallax amount={40} className="relative aspect-[4/3] rounded-[28px] bg-mist lg:aspect-[1/1] lg:max-h-[560px]">
@@ -100,7 +107,7 @@ async function ProgramBody({ params }: { params: P["params"] }) {
       {/* Photos */}
       <section className="page pb-16 md:pb-20">
         <Reveal className="mb-8"><h2 className="text-[clamp(1.8rem,1.3rem+1.6vw,2.75rem)] font-semibold tracking-[-0.035em]">{surgeon ? "Inside the OT and on graduation day" : "Inside the clinic"}</h2></Reveal>
-        <PhotoWall photos={surgeon ? COLLEGE_PHOTOS.slice(0, 8) : REHAB_PHOTOS} />
+        <PhotoWall photos={p.gallery?.length ? p.gallery.map((src, i) => ({ src, alt: `${p.title} photo ${i + 1}`, tall: i % 3 === 1 })) : surgeon ? COLLEGE_PHOTOS.slice(0, 8) : REHAB_PHOTOS} />
       </section>
 
       {/* Curriculum */}

@@ -1,5 +1,6 @@
 import "server-only";
-import { PROGRAMS, FAQS } from "./programs";
+import { FAQS } from "./programs";
+import { getPrograms } from "./program-store";
 import { VIDEOS } from "./videos";
 import { getArticles } from "./content";
 import { norm, type SearchItem } from "./search";
@@ -15,6 +16,7 @@ const STATIC_PAGES: [string, string, string][] = [
 
 export async function buildSearchIndex(): Promise<SearchItem[]> {
   const articles = await getArticles(200);
+  const PROGRAMS = await getPrograms();
   return [
     ...PROGRAMS.map((p) => ({ href: `/programs/${p.slug}`, title: p.title, kind: "Programme" as const, sub: `${p.duration} · ${p.format}`, image: p.image,
       text: norm(`${p.short} ${p.audience} ${p.highlights.join(" ")} ${p.curriculum.flatMap((c) => c.items).join(" ")}`).slice(0, 1200) })),
