@@ -15,6 +15,9 @@
   --color-black: #000000;
   --color-brand: #4c6fb4;    /* college blue */
   --color-navy: #192136;     /* college navy */
+  --color-ink: #0f1526;      /* deep text */
+  --color-teal: #98dbdb;     /* college teal (accent) */
+  --color-mist: #eef3f6;     /* cool surface */
   --color-sale: #c8102e;     /* discount */
   --color-ok: #1f7a3f;       /* in stock */
 
@@ -74,4 +77,15 @@
   .prose-rc th, .prose-rc td { border-bottom: 1px solid var(--color-line); padding: .6em .4em; text-align: left; }
   .prose-rc details { border-bottom: 1px solid var(--color-line); padding: .9em 0; }
   .prose-rc summary { cursor: pointer; font-weight: 600; color: #000; }
+}
+
+/* Arthroscopy College motion primitives */
+@layer components {
+  .marquee { display: flex; width: max-content; animation: marquee var(--marquee-speed, 40s) linear infinite; }
+  .marquee:hover { animation-play-state: paused; }
+  @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .live-dot { position: relative; display: inline-block; width: 8px; height: 8px; border-radius: 999px; background: #ff4d4f; }
+  .live-dot::after { content: ""; position: absolute; inset: -4px; border-radius: 999px; border: 2px solid #ff4d4f; animation: pulse 1.6s ease-out infinite; }
+  @keyframes pulse { from { transform: scale(.6); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .marquee { animation: none; } .live-dot::after { animation: none; } }
 }

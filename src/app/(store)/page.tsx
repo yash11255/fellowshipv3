@@ -1,137 +1,151 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FAQS } from "@/lib/programs";
-import { FEATURED_VIDEOS } from "@/lib/videos";
+import { VIDEOS } from "@/lib/videos";
 import { LiteYouTube } from "@/components/video/lite-youtube";
+import { HeroFilm } from "@/components/college/hero-film";
+import { Carousel } from "@/components/college/carousel";
+import { Reveal } from "@/components/college/reveal";
+import { ProgrammeShowcase } from "@/components/college/programme-showcase";
 
-/* Apple-style homepage: centred headlines, few words, big rounded imagery, grey tiles, text links. */
+/* Arthroscopy College: editorial, left-aligned, navy ink + teal accent. Film-led, generous whitespace. */
 
-function Links({ primary, secondary, dark }: { primary: [string, string]; secondary?: [string, string]; dark?: boolean }) {
-  const cls = dark ? "text-[#2997ff]" : "text-[#0066cc]";
-  return (
-    <p className="mt-4 flex flex-wrap justify-center gap-x-8 gap-y-2 text-[17px]">
-      <Link href={primary[1]} className={`${cls} hover:underline`}>{primary[0]} ›</Link>
-      {secondary && <Link href={secondary[1]} className={`${cls} hover:underline`}>{secondary[0]} ›</Link>}
-    </p>
-  );
-}
+const HOME_FILMS = ["twcQl-uuEqI", "z4kEsuu2lJg", "xeT3dADPSwk", "41ohFGiW_ak", "QILsw563Qss", "kAW51rVWYGA", "R_-23ZdG5h4"];
+const titleOf = (id: string) => VIDEOS.find((v) => v.id === id)?.title ?? "Arthroscopy College";
 
-function Tile({ title, sub, href, apply, image, dark, priority }: { title: string; sub: string; href: string; apply: string; image: string; dark?: boolean; priority?: boolean }) {
-  return (
-    <section className={`relative flex min-h-[580px] flex-col overflow-hidden rounded-[22px] text-center md:min-h-[640px] ${dark ? "bg-black text-white" : "bg-[#f5f5f7] text-[#1d1d1f]"}`}>
-      <div className="relative z-10 px-6 pt-12">
-        <h2 className="text-[clamp(1.9rem,1.4rem+1.6vw,2.6rem)] font-semibold leading-[1.08] tracking-[-0.025em]">{title}</h2>
-        <p className={`mx-auto mt-2 max-w-[30ch] text-[clamp(1.05rem,0.95rem+0.4vw,1.3rem)] ${dark ? "text-white/80" : "text-[#1d1d1f]"}`}>{sub}</p>
-        <Links primary={["Learn more", href]} secondary={["Apply", apply]} dark={dark} />
-      </div>
-      <div className="relative mt-auto h-[58%] min-h-[300px]">
-        <Image src={image} alt="" fill priority={priority} sizes="(min-width:768px) 50vw, 100vw" className="object-cover" />
-      </div>
-    </section>
-  );
-}
+const PROGRAMS = [
+  { n: "01", t: "Fellowship in Arthroscopy", d: "One month in the OT. Knee, shoulder, ankle. 30–40 surgeries.", m: "1 month · Gurugram", href: "/programs/fellowship-in-arthroscopy", tags: ["Knee","Shoulder","Ankle","Arthrex certificate"], apply: "/apply?program=fellowship-in-arthroscopy", img: "/img/ot-2.webp" },
+  { n: "02", t: "Next-Gen ACL Course", d: "Quad tendon, internal brace and LET, from portals to implants.", m: "5 days · monthly", href: "/programs/advance-acl-course", tags: ["Quad graft","FiberTape","LET","OT assistance"], apply: "/apply?program=advance-acl-course", img: "/img/ot-1.webp" },
+  { n: "03", t: "Physiotherapy Internship", d: "ACL rehabilitation with real patients, pre-op to return-to-sport.", m: "1 month · in clinic", href: "/programs/physiotherapy-internship", tags: ["Phase I–V rehab","Real patients","Certificate"], apply: "/apply?program=physiotherapy-internship", img: "/img/faculty-viraj.jpg" },
+  { n: "04", t: "ACL Rehab Workshop", d: "Two focused days for physiotherapists, with certification.", m: "2 days · weekend", href: "/programs/acl-rehab-workshop", tags: ["Assessment","Return-to-sport","Certificate"], apply: "/apply?program=acl-rehab-workshop", img: "/img/alumni-8.jpg" },
+];
+
+const TRUST = ["Arthrex Master Instructor", "Certificate from Arthrex", "30–40 surgeries every month", "Hands-on in the operating theatre", "Fellows from India and abroad", "Internal-brace specialists", "VR and model training"];
 
 export default async function Home() {
   return (
-    <div className="bg-white text-[#1d1d1f]">
-      {/* Hero */}
-      <section className="pt-14 text-center md:pt-20">
-        <div className="page">
-          <p className="text-[clamp(1.1rem,1rem+0.5vw,1.5rem)] font-semibold text-[#6e6e73]">Arthroscopy College</p>
-          <h1 className="mx-auto mt-2 max-w-[16ch] text-[clamp(2.75rem,1.6rem+5vw,6rem)] font-semibold leading-[1.02] tracking-[-0.04em]">Learn arthroscopy in the OT.</h1>
-          <p className="mx-auto mt-5 max-w-[34ch] text-[clamp(1.15rem,1rem+0.6vw,1.6rem)] leading-snug">A one-month fellowship with Dr. Manu Bora. 30–40 surgeries. Hands-on.</p>
-          <Links primary={["Apply for fellowship", "/apply?program=fellowship-in-arthroscopy"]} secondary={["Learn more", "/programs/fellowship-in-arthroscopy"]} />
-        </div>
-        <div className="mx-auto mt-12 max-w-[1440px] px-4 md:px-8">
-          <div className="relative aspect-[16/9] overflow-hidden rounded-[22px] md:aspect-[2.18/1]">
-            <Image src="/img/ot-1.webp" alt="Fellows operating with Dr. Manu Bora" fill priority sizes="100vw" className="object-cover" />
+    <div className="bg-white text-ink">
+      {/* Hero: the original site's film, full bleed */}
+      <section className="relative isolate flex min-h-[100svh] items-end overflow-hidden text-white">
+        <HeroFilm id="gJz1rAvU0n4" poster="/img/ot-1.webp" />
+        <div aria-hidden className="absolute inset-0 -z-[5] bg-[linear-gradient(to_top,rgba(15,21,38,.85),rgba(15,21,38,.15)_55%,rgba(15,21,38,.35))]" />
+        <div className="page w-full pb-14 pt-32 md:pb-20">
+          <p className="flex items-center gap-3 text-[13px] font-medium uppercase tracking-[0.18em] text-white/80"><span className="live-dot" /> Filmed in our operating theatre</p>
+          <h1 className="mt-6 max-w-[13ch] text-[clamp(2.8rem,1.4rem+6vw,7.25rem)] font-semibold leading-[0.95] tracking-[-0.045em]">Train where the surgery happens.</h1>
+          <div className="mt-10 flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+            <p className="max-w-[44ch] text-[clamp(1.05rem,0.95rem+0.4vw,1.3rem)] leading-relaxed text-white/85">A one-month arthroscopy fellowship with Dr. Manu Bora, Arthrex Master Instructor. You scrub in, assist and operate.</p>
+            <div className="flex flex-wrap gap-3">
+              <Link href="/apply?program=fellowship-in-arthroscopy" className="inline-flex h-13 items-center rounded-full bg-teal px-7 text-[15px] font-semibold text-ink transition-transform hover:-translate-y-0.5">Apply for the fellowship</Link>
+              <Link href="/programs" className="inline-flex h-13 items-center rounded-full border border-white/40 px-7 text-[15px] font-medium text-white backdrop-blur transition-colors hover:bg-white hover:text-ink">See programmes</Link>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Statement */}
-      <section className="page py-24 text-center md:py-36">
-        <p className="mx-auto max-w-[22ch] text-[clamp(2rem,1.3rem+3vw,4rem)] font-semibold leading-[1.08] tracking-[-0.035em]">
-          India&apos;s highest number of ACL internal-brace surgeries. <span className="text-[#86868b]">Now you can learn how they&apos;re done.</span>
-        </p>
-      </section>
-
-      {/* Program tiles */}
-      <div className="mx-auto grid max-w-[1440px] gap-3 px-3 md:grid-cols-2 md:px-6">
-        <Tile title="Fellowship in Arthroscopy" sub="Knee, shoulder, ankle. One month in the OT." href="/programs/fellowship-in-arthroscopy" apply="/apply?program=fellowship-in-arthroscopy" image="/img/ot-2.webp" dark priority />
-        <Tile title="Next-Gen ACL Course" sub="Quad tendon. Internal brace. LET. Five days." href="/programs/advance-acl-course" apply="/apply?program=advance-acl-course" image="/img/ot-1.webp" />
-        <Tile title="Physiotherapy Internship" sub="ACL rehab, pre-op to return-to-sport." href="/programs/physiotherapy-internship" apply="/apply?program=physiotherapy-internship" image="/img/faculty-viraj.jpg" />
-        <Tile title="ACL Rehab Workshop" sub="Two days for physiotherapists." href="/programs/acl-rehab-workshop" apply="/apply?program=acl-rehab-workshop" image="/img/alumni-8.jpg" />
+      {/* Trust marquee */}
+      <div className="overflow-hidden border-b border-ink/10 py-6" aria-label="Why Arthroscopy College">
+        <div className="marquee [--marquee-speed:45s]">
+          {[...TRUST, ...TRUST].map((t, i) => (
+            <span key={i} className="flex items-center gap-10 pr-10 text-[15px] font-medium text-ink/70 whitespace-nowrap">{t}<span aria-hidden className="size-1.5 rounded-full bg-brand" /></span>
+          ))}
+        </div>
       </div>
 
-      {/* Numbers */}
-      <section className="page py-24 md:py-32">
-        <div className="grid gap-12 text-center md:grid-cols-3">
-          {[["30–40", "surgeries a month"], ["1 month", "extendable fellowship"], ["Arthrex", "certificate"]].map(([n, l]) => (
-            <div key={l}><p className="text-[clamp(3rem,2rem+3vw,4.5rem)] font-semibold leading-none tracking-[-0.04em]">{n}</p><p className="mt-3 text-[19px] text-[#6e6e73]">{l}</p></div>
-          ))}
+      {/* Statement */}
+      <section className="page grid gap-10 py-28 md:grid-cols-12 md:py-40">
+        <Reveal className="md:col-span-8">
+          <p className="text-[clamp(1.9rem,1.2rem+2.6vw,3.5rem)] font-medium leading-[1.12] tracking-[-0.03em]">
+            India&apos;s highest volume of ACL internal-brace surgery happens here. <span className="text-ink/40">Our fellows stand at the table for every one of them.</span>
+          </p>
+        </Reveal>
+        <Reveal delay={0.15} className="self-end md:col-span-3 md:col-start-10">
+          <dl className="space-y-6 border-l border-ink/15 pl-6">
+            {[["30–40", "surgeries a month"], ["1 month", "extendable"], ["Arthrex", "certification"]].map(([n, l]) => (
+              <div key={l}><dt className="text-[2rem] font-semibold leading-none tracking-[-0.03em]">{n}</dt><dd className="mt-1 text-[14px] text-ink/60">{l}</dd></div>
+            ))}
+          </dl>
+        </Reveal>
+      </section>
+
+      {/* Programmes: interactive showcase */}
+      <section className="bg-mist py-24 md:py-36">
+        <div className="page">
+          <Reveal className="mb-14 flex flex-wrap items-end justify-between gap-6">
+            <h2 className="max-w-[14ch] text-[clamp(2.2rem,1.4rem+2.6vw,3.75rem)] font-semibold leading-[1.02] tracking-[-0.04em]">Four ways to train with us.</h2>
+            <Link href="/programs" className="text-[15px] font-semibold text-brand hover:underline">Compare all programmes →</Link>
+          </Reveal>
+          <Reveal delay={0.1}><ProgrammeShowcase items={PROGRAMS} /></Reveal>
         </div>
       </section>
 
-      {/* Doctor */}
-      <section className="bg-[#f5f5f7] py-24 md:py-32">
-        <div className="page text-center">
-          <h2 className="text-[clamp(2.2rem,1.4rem+3vw,4rem)] font-semibold leading-[1.05] tracking-[-0.035em]">Dr. Manu Bora.</h2>
-          <p className="mx-auto mt-4 max-w-[40ch] text-[clamp(1.1rem,1rem+0.5vw,1.45rem)] leading-snug text-[#1d1d1f]">Master Instructor, Arthrex. All-inside ACL &amp; PCL reconstruction with FiberTape internal brace.</p>
-          <Links primary={["Read his story", "/dr-manu-bora"]} />
-          <div className="relative mx-auto mt-12 aspect-[4/5] max-w-[440px] overflow-hidden rounded-[22px] bg-white">
-            <Image src="/brand/dr-manu-bora.jpg" alt="Dr. Manu Bora" fill sizes="440px" className="object-cover object-top" />
+      {/* Dr. Bora: split portrait */}
+      <section className="page grid items-center gap-12 py-28 md:grid-cols-2 md:gap-20 md:py-40">
+        <Reveal>
+          <div className="relative aspect-[4/5] overflow-hidden rounded-[28px] bg-mist">
+            <Image src="/brand/dr-manu-bora.jpg" alt="Dr. Manu Bora" fill sizes="(min-width:768px) 45vw, 100vw" className="object-cover object-top" />
           </div>
-        </div>
+        </Reveal>
+        <Reveal delay={0.15}>
+          <h2 className="text-[clamp(2.2rem,1.4rem+3vw,4rem)] font-semibold leading-[1.02] tracking-[-0.04em]">Taught by Dr. Manu Bora.</h2>
+          <p className="mt-6 max-w-[46ch] text-[18px] leading-relaxed text-ink/70">Orthopaedic and arthroscopy surgeon and Arthrex Master Instructor, known for all-inside ACL and PCL reconstruction with FiberTape internal brace. He operates, explains every step and lets you do the work.</p>
+          <blockquote className="mt-10 border-l-2 border-teal pl-6 text-[20px] font-medium leading-snug tracking-[-0.01em]">&ldquo;The best way to learn surgery is to be in surgery.&rdquo;</blockquote>
+          <Link href="/dr-manu-bora" className="mt-10 inline-flex items-center gap-2 text-[15px] font-semibold text-brand hover:gap-3 transition-all">Read his story <span aria-hidden>→</span></Link>
+        </Reveal>
       </section>
 
-      {/* Videos */}
+      {/* Films carousel, dark */}
+      <section className="bg-ink py-24 text-white md:py-32">
+        <div className="page mb-12 flex flex-wrap items-end justify-between gap-6">
+          <Reveal><h2 className="max-w-[18ch] text-[clamp(2rem,1.4rem+2vw,3.25rem)] font-semibold leading-[1.05] tracking-[-0.035em]">From the theatre, unedited.</h2></Reveal>
+          <Link href="/videos" className="text-[15px] font-semibold text-teal hover:underline">All {VIDEOS.length} films →</Link>
+        </div>
+        <Carousel label="Fellowship films" dark itemClass="w-[82vw] sm:w-[480px]">
+          {HOME_FILMS.map((id) => (
+            <figure key={id}>
+              <LiteYouTube id={id} title={titleOf(id)} />
+              <figcaption className="mt-4 line-clamp-2 text-[16px] font-medium leading-snug text-white/85">{titleOf(id)}</figcaption>
+            </figure>
+          ))}
+        </Carousel>
+      </section>
+
+      {/* Fellows carousel */}
       <section className="py-24 md:py-32">
-        <div className="page flex flex-wrap items-end justify-between gap-4">
-          <h2 className="text-[clamp(2rem,1.4rem+2vw,3rem)] font-semibold tracking-[-0.03em]">Watch the fellowship.</h2>
-          <Link href="/videos" className="text-[17px] text-[#0066cc] hover:underline">All videos ›</Link>
+        <div className="page mb-12 flex flex-wrap items-end justify-between gap-6">
+          <Reveal><h2 className="text-[clamp(2rem,1.4rem+2vw,3.25rem)] font-semibold tracking-[-0.035em]">Certified every month.</h2></Reveal>
+          <Link href="/gallery" className="text-[15px] font-semibold text-brand hover:underline">Gallery →</Link>
         </div>
-        <ul className="mt-8 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-px-4 px-4 pb-4 [scrollbar-width:none] md:scroll-px-8 md:px-8 xl:scroll-px-[calc((100vw-96rem)/2+3rem)] xl:px-[calc((100vw-96rem)/2+3rem)] [&::-webkit-scrollbar]:hidden">
-          {FEATURED_VIDEOS.map((v) => (
-            <li key={v.id} className="w-[82vw] shrink-0 snap-start sm:w-[460px]">
-              <LiteYouTube id={v.id} title={v.title} />
-              <p className="mt-4 line-clamp-2 text-[17px] font-semibold leading-snug tracking-[-0.01em]">{v.title}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* Alumni */}
-      <section className="page">
-        <h2 className="text-center text-[clamp(2rem,1.4rem+2vw,3rem)] font-semibold tracking-[-0.03em]">Our fellows.</h2>
-        <p className="mt-2 text-center text-[19px] text-[#6e6e73]">Certified, every month.</p>
-        <ul className="mt-12 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Carousel label="Our fellows" itemClass="w-[64vw] sm:w-[300px]">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <li key={i} className="relative aspect-[3/4] overflow-hidden rounded-[18px] bg-[#f5f5f7]"><Image src={`/img/alumni-${i}.jpg`} alt="Fellow receiving a certificate from Dr. Manu Bora" fill sizes="(min-width:768px) 25vw, 50vw" className="object-cover" /></li>
+            <div key={i} className="relative aspect-[3/4] overflow-hidden rounded-[22px] bg-mist">
+              <Image src={`/img/alumni-${i}.jpg`} alt="Fellow receiving a certificate from Dr. Manu Bora" fill sizes="300px" className="object-cover" />
+            </div>
           ))}
-        </ul>
-        <p className="mt-6 text-center"><Link href="/gallery" className="text-[17px] text-[#0066cc] hover:underline">View gallery ›</Link></p>
+        </Carousel>
       </section>
 
-      {/* FAQ */}
-      <section className="page py-24 md:py-32">
-        <h2 className="text-center text-[clamp(2rem,1.4rem+2vw,3rem)] font-semibold tracking-[-0.03em]">Questions.</h2>
-        <div className="mx-auto mt-10 max-w-3xl divide-y divide-[#d2d2d7] border-y border-[#d2d2d7]">
+      {/* FAQ: two-column */}
+      <section className="page grid gap-12 border-t border-ink/10 py-24 md:grid-cols-12 md:py-32">
+        <Reveal className="md:col-span-4"><h2 className="text-[clamp(2rem,1.4rem+2vw,3.25rem)] font-semibold tracking-[-0.035em]">Questions, answered.</h2><p className="mt-4 text-ink/60">Something else? <Link href="/contact-us" className="text-brand hover:underline">Talk to us</Link>.</p></Reveal>
+        <div className="divide-y divide-ink/10 border-y border-ink/10 md:col-span-7 md:col-start-6">
           {FAQS.map((f) => (
-            <details key={f.q} className="group py-5">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-[19px] font-semibold tracking-[-0.01em] [&::-webkit-details-marker]:hidden">{f.q}<span aria-hidden className="text-[24px] font-light text-[#6e6e73] transition-transform group-open:rotate-45">+</span></summary>
-              <p className="mt-3 text-[17px] leading-relaxed text-[#424245]">{f.a}</p>
+            <details key={f.q} className="group py-6">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-[18px] font-medium [&::-webkit-details-marker]:hidden">{f.q}<span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full border border-ink/15 transition-transform duration-300 group-open:rotate-45">+</span></summary>
+              <p className="mt-4 max-w-[62ch] leading-relaxed text-ink/65">{f.a}</p>
             </details>
           ))}
         </div>
       </section>
 
       {/* Closing */}
-      <section className="bg-[#f5f5f7] py-24 text-center md:py-32">
-        <div className="page">
-          <h2 className="mx-auto max-w-[18ch] text-[clamp(2.2rem,1.4rem+3vw,4rem)] font-semibold leading-[1.05] tracking-[-0.035em]">Limited seats. Every month.</h2>
-          <p className="mt-4 text-[19px] text-[#6e6e73]">Apply in three minutes. We call you within two working days.</p>
-          <Link href="/apply" className="mt-8 inline-flex h-12 items-center rounded-full bg-[#0071e3] px-7 text-[17px] text-white hover:bg-[#0077ed]">Apply now</Link>
+      <section className="relative isolate overflow-hidden bg-navy text-white">
+        <Image src="/img/ot-2.webp" alt="" fill sizes="100vw" className="-z-10 object-cover opacity-25" />
+        <div className="page py-28 md:py-40">
+          <Reveal>
+            <h2 className="max-w-[16ch] text-[clamp(2.4rem,1.4rem+4vw,5rem)] font-semibold leading-[1] tracking-[-0.045em]">A few seats. Every month.</h2>
+            <p className="mt-6 max-w-[40ch] text-[18px] text-white/75">Apply in three minutes. Our team calls you within two working days.</p>
+            <Link href="/apply" className="mt-10 inline-flex h-13 items-center rounded-full bg-teal px-8 text-[15px] font-semibold text-ink transition-transform hover:-translate-y-0.5">Start your application</Link>
+          </Reveal>
         </div>
       </section>
     </div>
