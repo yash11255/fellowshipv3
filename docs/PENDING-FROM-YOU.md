@@ -26,5 +26,5 @@
 
 ## Admin notes
 - **Image uploads** (Blog / Programmes → Upload) save to `public/uploads/` on the server's disk. That works on a VPS; on Vercel/serverless switch to object storage (Cloudflare R2, S3 or Vercel Blob) before launch.
-- **Fresh database setup:** `npm run db:push`, then `node scripts/migrate-0007-seo.mjs`, `node scripts/migrate-0008-programs.mjs`, then `npm run db:seed` (programmes, blog import, legal pages).
-- Stop the dev server cleanly (Ctrl+C) — the embedded dev database can corrupt if the process is killed.
+- **Local database:** dev now uses a real Postgres (`brew services start postgresql@17`, database `arthroscopy_college`, `DATABASE_URL` in `.env.local`). The embedded PGlite fallback corrupted twice when the server was force-killed.
+- **Fresh database setup:** `npx drizzle-kit push --force`, then `node scripts/migrate-0007-seo.mjs`, `node scripts/migrate-0008-programs.mjs`, then `npm run db:seed` (programmes, blog import, legal pages).

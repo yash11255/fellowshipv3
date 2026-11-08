@@ -1,6 +1,6 @@
 // Draft legal pages written for Arthroscopy College (the old site only had WordPress placeholder text).
 // Review with your lawyer, then edit in Admin → Content. Usage (dev server stopped): node scripts/seed-legal.mjs
-import { PGlite } from "@electric-sql/pglite";
+import { openDb } from "./_db.mjs";
 const ORG = "Arthroscopy College (Orthosport × Threads Physio), F-10/4, Basement, Golf Course Rd, DLF Phase 1, Sector 27, Gurugram, Haryana 122001";
 const CONTACT = `<p>Questions: <a href="mailto:orthosportin@gmail.com">orthosportin@gmail.com</a> · <a href="tel:+919650620870">+91 96506 20870</a><br />${ORG}</p>`;
 const PAGES = {
@@ -35,7 +35,7 @@ const PAGES = {
 <p>If you have a medical emergency, call 112 or go to the nearest hospital.</p>
 <h2>Contact</h2>${CONTACT}`],
 };
-const db = new PGlite("./.data/pg");
+const db = await openDb();
 for (const [slug, [title, body]] of Object.entries(PAGES)) await db.query(`insert into pages (slug,title,body) values ($1,$2,$3) on conflict (slug) do update set title=excluded.title, body=excluded.body, updated_at=now()`, [slug, title, body.replace(/\n/g, "")]);
 console.log("legal pages:", Object.keys(PAGES).length);
 await db.close();

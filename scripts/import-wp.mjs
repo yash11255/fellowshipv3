@@ -4,7 +4,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import sanitizeHtml from "sanitize-html";
-import { PGlite } from "@electric-sql/pglite";
+import { openDb } from "./_db.mjs";
 
 const posts = JSON.parse(fs.readFileSync(".raw/wp-posts.json", "utf8"));
 const media = JSON.parse(fs.readFileSync(".raw/wp-media.json", "utf8"));
@@ -39,7 +39,7 @@ const ALLOWED = {
 const embeds = (h) => h.replace(/<figure[^>]*wp-block-embed[^>]*>[\s\S]*?(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11}))[\s\S]*?<\/figure>/g, (_m, _u, id) => `<iframe src="https://www.youtube.com/embed/${id}"></iframe>`);
 const clean = (h) => sanitizeHtml(embeds(h), ALLOWED).replace(/<span><\/span>/g, "").replace(/\s{2,}/g, " ").trim();
 
-const db = new PGlite("./.data/pg");
+const db = await openDb();
 let a = 0;
 for (const p of posts) {
   if (p.status !== "publish") continue;
