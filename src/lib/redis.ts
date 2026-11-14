@@ -15,7 +15,9 @@ import { Redis } from "@upstash/redis";
 function create(): Redis | null {
   const url = process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token) return null;
+  // Also guards against an unresolved placeholder value (e.g. "[SENSITIVE]")
+  // showing up in a pulled .env file instead of the real secret.
+  if (!url || !token || !/^https?:\/\//.test(url)) return null;
   return new Redis({ url, token });
 }
 
