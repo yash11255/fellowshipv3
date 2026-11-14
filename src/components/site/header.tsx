@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { SearchOverlay } from "@/components/search/search-overlay";
 import { Logo } from "@/components/logo";
+import { AccountMenu } from "./account-menu";
 
 const nav = [
   { href: "/programs/fellowship-in-arthroscopy", label: "Fellowship" },
@@ -44,6 +45,7 @@ export function Header() {
             <button onClick={() => setSearchOpen(true)} aria-label="Search" className="text-ink/70 hover:text-ink">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden><path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4" /></svg>
             </button>
+            <AccountMenu />
             <Link href="/apply" className="hidden rounded-full bg-ink px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-brand sm:inline-block">Apply</Link>
             <button className="lg:hidden" onClick={() => setMenu((m) => !m)} aria-expanded={menu} aria-controls="mobile-nav" aria-label="Menu">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden><path d={menu ? "M6 6l12 12M18 6L6 18" : "M4 9h16M4 15h16"} /></svg>
@@ -55,7 +57,7 @@ export function Header() {
             <motion.nav id="mobile-nav" aria-label="Mobile" className="overflow-hidden bg-white lg:hidden"
               initial={{ height: 0 }} animate={{ height: "100dvh" }} exit={{ height: 0 }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}>
               <ul className="px-10 pt-6">
-                {[...nav, { href: "/apply", label: "Apply" }, { href: "/account", label: "Student login" }].map((n, i) => (
+                {[...nav, { href: "/apply", label: "Apply" }, { href: "/account", label: "My dashboard / Sign in" }].map((n, i) => (
                   <motion.li key={n.href} initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 + i * 0.03 }}>
                     <Link href={n.href} onClick={() => setMenu(false)} className="block py-2 text-[28px] font-semibold tracking-[-0.02em] text-ink">{n.label}</Link>
                   </motion.li>

@@ -35,7 +35,7 @@ export function SettingsForm({ title, description, fields, initial, target, chil
     });
   };
   const test = () => start(async () => {
-    if (target.kind !== "integration" || target.name === "shipping") return;
+    if (target.kind !== "integration" || target.name !== "razorpay") return;
     const r = await testIntegration(target.name, { keyId: String(v.keyId ?? ""), keySecret: String(v.keySecret ?? "") });
     setMsg(r.ok ? { ok: true, text: "Connected successfully ✓" } : { ok: false, text: r.error });
   });

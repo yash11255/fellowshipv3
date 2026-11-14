@@ -36,6 +36,11 @@ export async function submitEnquiry(raw: z.input<typeof Input>) {
     subject: p.data.kind === "clinic" ? `New consultation request: ${p.data.service ?? "General"}` : `New contact message from ${p.data.name}`,
     text: `${p.data.name} <${p.data.email}> ${p.data.phone ?? ""}\n${p.data.service ? `Service: ${p.data.service}\n` : ""}${p.data.preferredDate ? `Preferred date: ${p.data.preferredDate}\n` : ""}\n${p.data.message}`,
   }).catch(() => {});
+  await sendEmail({
+    to: p.data.email.toLowerCase(),
+    subject: "We've received your message",
+    text: `Hi ${p.data.name.split(" ")[0]},\n\nThanks for contacting Arthroscopy College${p.data.service ? ` about ${p.data.service}` : ""}. Our team will reply within one working day.\n\nYour message:\n${p.data.message}\n\nFor anything urgent, WhatsApp us on +91 96506 20870.\n\nArthroscopy College`,
+  }).catch(() => {});
   return { ok: true as const };
 }
 

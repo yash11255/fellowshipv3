@@ -175,3 +175,18 @@ export async function listMedia() {
   const uploads = (await walk("uploads")).sort().reverse();
   return [...uploads, ...(await walk("img")), ...(await walk("brand")), ...(await walk("media"))];
 }
+
+// ── Email ────────────────────────────────────────────────────
+export async function sendTestEmail(to: string) {
+  const user = await requireStaff("manager");
+  const addr = (to || user.email).trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr)) return { ok: false as const, error: "Enter a valid email." };
+  const { sendEmail, emailProvider } = await import("./email");
+  try {
+    await sendEmail({ to: addr, subject: "Test email from Arthroscopy College", text: `This is a test from your website's admin panel.\n\nIf you can read this, application, payment and sign-in emails will reach students too.\n\nSent via: ${emailProvider()}` });
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : "Send failed" };
+  }
+  revalidatePath("/admin/emails");
+  return { ok: true as const };
+}

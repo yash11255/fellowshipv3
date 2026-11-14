@@ -16,23 +16,23 @@ async function Login({ searchParams }: { searchParams: PageProps<"/login">["sear
   return <LoginForm next={next} dev={devCodesOnScreen()} initialEmail={email} />;
 }
 
-const PERKS = ["Track orders and deliveries", "Reorder your stack in one tap", "Saved address for faster checkout", "Members-only offers"];
+const PERKS = ["Track your application status", "Pay your seat fee securely", "Cohort dates and joining details", "Prep films before you arrive"];
 
 export default function Page({ searchParams }: PageProps<"/login">) {
   return (
-    <div className="grid min-h-[calc(100dvh-108px)] lg:grid-cols-2">
-      <div className="relative hidden bg-[#1a1a1a] lg:block">
-        <Image src="/lifestyle/longevity.jpg" alt="" fill sizes="50vw" className="object-cover" priority />
-        <div className="absolute inset-0 bg-black/45" />
+    <div className="page grid gap-6 py-6 lg:min-h-[calc(100dvh-140px)] lg:grid-cols-2">
+      <div className="relative hidden overflow-hidden rounded-[32px] bg-navy lg:block">
+        <Image src="/img/cert-1.jpg" alt="" fill sizes="50vw" className="object-cover" priority />
+        <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(15,21,38,.9),rgba(15,21,38,.15)_60%)]" />
         <div className="absolute inset-x-0 bottom-0 p-12 text-white">
-          <p className="label text-white/70">Your Reverse account</p>
-          <p className="hd-1 mt-3 max-w-[14ch]">Small daily choices. Compounded.</p>
+          <p className="text-[13px] font-medium uppercase tracking-[0.16em] text-teal">Student &amp; staff login</p>
+          <p className="mt-3 max-w-[16ch] text-[clamp(2rem,1.4rem+1.6vw,3rem)] font-semibold leading-[1.02] tracking-[-0.04em]">Your seat at the table starts here.</p>
           <ul className="mt-8 space-y-2">
-            {PERKS.map((p) => <li key={p} className="flex items-center gap-3 text-[15px]"><span aria-hidden className="size-1.5 bg-brand" />{p}</li>)}
+            {PERKS.map((p) => <li key={p} className="flex items-center gap-3 text-[15px]"><span aria-hidden className="size-1.5 rounded-full bg-teal" />{p}</li>)}
           </ul>
         </div>
       </div>
-      <div className="flex items-start justify-center px-4 py-12 md:py-20">
+      <div className="flex items-center justify-center py-8 md:py-12">
         <div className="w-full max-w-md">
           <Suspense fallback={<div className="h-72" aria-busy />}>
             <Login searchParams={searchParams} />

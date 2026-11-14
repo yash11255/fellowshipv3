@@ -47,6 +47,9 @@ export const users = pgTable("users", {
   name: text("name"),
   phone: text("phone"),
   role: role("role").notNull().default("customer"),
+  passwordHash: text("password_hash"),           // scrypt; null until the user sets a password
+  failedLogins: integer("failed_logins").notNull().default(0),
+  lockedUntil: timestamp("locked_until", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -259,4 +262,16 @@ export const programs = pgTable("programs", {
   position: integer("position").notNull().default(0),
   published: boolean("published").notNull().default(true),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ── Outgoing email log (Admin → Emails) ──
+export const emailLog = pgTable("email_log", {
+  id: serial("id").primaryKey(),
+  to: text("to").notNull(),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  provider: text("provider").notNull(),          // smtp | resend | dev
+  status: text("status").notNull(),              // sent | failed | logged
+  error: text("error"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

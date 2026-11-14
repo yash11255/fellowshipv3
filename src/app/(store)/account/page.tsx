@@ -11,6 +11,7 @@ import { inr, type Program } from "@/lib/programs";
 import { getAllPrograms } from "@/lib/program-store";
 import { FEATURED_VIDEOS } from "@/lib/videos";
 import { LiteYouTube } from "@/components/video/lite-youtube";
+import { ChangePassword } from "@/components/account/change-password";
 
 export const metadata: Metadata = { title: "Student dashboard", robots: { index: false } };
 const date = (d: Date) => d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
@@ -140,6 +141,12 @@ async function Dashboard() {
             {FEATURED_VIDEOS.slice(0, 2).map((v) => <div key={v.id}><LiteYouTube id={v.id} title={v.title} /><p className="mt-2 line-clamp-2 text-[14px] font-medium">{v.title}</p></div>)}
           </div>
         </div>
+      </section>
+
+      <section id="security" className="mt-4 scroll-mt-24 rounded-[28px] border border-ink/10 p-7">
+        <h2 className="text-[20px] font-semibold tracking-[-0.02em]">Sign-in &amp; security</h2>
+        <p className="mt-1 text-[14px] text-ink/60">{user.passwordHash ? "You can sign in with your password or an email code." : "Set a password to sign in faster next time. You can always use an email code too."}</p>
+        <div className="mt-4"><ChangePassword hasPassword={!!user.passwordHash} /></div>
       </section>
 
       <section className="mt-4 flex flex-col items-start justify-between gap-4 rounded-[28px] border border-ink/10 p-7 md:flex-row md:items-center">
