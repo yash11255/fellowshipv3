@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "next",
+  "installCommand": "corepack enable && pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm run build",
+  "regions": ["bom1"],
+  "env": {
+    "PAYMENTS_TEST_MODE": "1"
+  }
+}
