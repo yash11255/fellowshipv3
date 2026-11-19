@@ -50,9 +50,11 @@ export async function updateSlot(raw: z.input<typeof UpdateSlot>) {
   if (p.data.balanceDueDays !== undefined) patch.balanceDueDays = p.data.balanceDueDays;
   if (p.data.startDate !== undefined) { const s = new Date(p.data.startDate); if (!Number.isNaN(s.getTime())) patch.startDate = s; }
   if (p.data.endDate !== undefined) { const e = p.data.endDate ? new Date(p.data.endDate) : null; patch.endDate = e && !Number.isNaN(e.getTime()) ? e : null; }
+  const [cur] = await d.select().from(schema.programSlots).where(eq(schema.programSlots.id, p.data.id)).limit(1);
+  if (!cur) return { ok: false as const, error: "Not found" };
+  if (patch.capacity !== undefined && patch.capacity < cur.confirmedCount) return { ok: false as const, error: `Can't set capacity below the ${cur.confirmedCount} seat(s) already confirmed.` };
   const [row] = await d.update(schema.programSlots).set(patch).where(eq(schema.programSlots.id, p.data.id)).returning();
   if (!row) return { ok: false as const, error: "Not found" };
-  if (patch.capacity !== undefined && patch.capacity < row.confirmedCount) return { ok: false as const, error: `Can't set capacity below the ${row.confirmedCount} seat(s) already confirmed.` };
   revalidate(p.data.programSlug);
   return { ok: true as const, slot: row };
 }

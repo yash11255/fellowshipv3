@@ -10,7 +10,7 @@ import { requireStaff } from "./admin";
 import { sendEmail } from "./email";
 import { inr } from "./programs";
 import { getProgramBySlug } from "./program-store";
-import { getSlot, releaseSeat, takeSeat } from "./slots";
+import { getSlot, releaseSeat, seatsLeft, takeSeat } from "./slots";
 import { createRazorpayOrder, razorpayEnabled, verifyPaymentSignature } from "./razorpay";
 
 const DEFAULT_BALANCE_DUE_DAYS = 14;
@@ -42,6 +42,7 @@ export async function submitApplication(raw: z.input<typeof Apply>) {
   if (p.data.slotId) {
     const slot = await getSlot(p.data.slotId);
     if (!slot || slot.programSlug !== program.slug || slot.status !== "open") return { ok: false as const, error: "That batch isn't open any more — pick another.", field: "slotId" };
+    if (seatsLeft(slot) === 0) return { ok: false as const, error: "That batch is full — pick another.", field: "slotId" };
     cohort = slot.label;
   }
 
@@ -132,11 +133,14 @@ export async function releaseApplicationSeat(id: number) {
   const d = await db();
   const [a] = await d.select().from(schema.applications).where(eq(schema.applications.id, id)).limit(1);
   if (!a) return { ok: false as const, error: "Not found" };
-  if (a.slotId) await releaseSeat(a.slotId);
-  await d.update(schema.applications).set({
+  if (a.status === "withdrawn") return { ok: false as const, error: "Already withdrawn." };
+  // A seat is only held once a payment has landed (status paid/enrolled with money in).
+  const heldSeat = !!a.slotId && a.amountPaid > 0 && (a.status === "paid" || a.status === "enrolled");
+  const [w] = await d.update(schema.applications).set({
     status: "withdrawn", balanceDueAt: null, updatedAt: new Date(),
     staffNote: `${a.staffNote ? a.staffNote + "\n" : ""}Seat released by staff.`,
-  }).where(eq(schema.applications.id, a.id));
+  }).where(and(eq(schema.applications.id, a.id), eq(schema.applications.status, a.status))).returning();
+  if (w && heldSeat) await releaseSeat(a.slotId!);
   revalidatePath("/admin/applications");
   revalidatePath(`/admin/applications/${a.number}`);
   return { ok: true as const };
@@ -167,22 +171,30 @@ async function settlePayment(a: AppRow, paymentId: string) {
   const fullyPaid = newPaid >= total;
   const firstPayment = a.status === "accepted";
 
-  let seatOk = true;
-  if (firstPayment && a.slotId) seatOk = await takeSeat(a.slotId);
-
   const dueDate = fullyPaid ? null : new Date(Date.now() + (await balanceDueDaysFor(a)) * 86_400_000);
   const patch: Partial<AppRow> = {
     status: "paid", amountPaid: newPaid, razorpayPaymentId: paymentId, updatedAt: new Date(), paidAt: a.paidAt ?? new Date(),
     payNow: fullyPaid ? 0 : total - newPaid,
     balanceDueAt: dueDate,
+    // The order this payment settled is spent: clearing it stops a late/duplicate webhook for the same
+    // order from being credited again as the balance.
+    razorpayOrderId: null,
   };
-  if (!seatOk) patch.staffNote = `${a.staffNote ? a.staffNote + "\n" : ""}⚠ Payment received but the slot was already full when the seat was claimed — reassign the batch or refund.`;
 
-  // Optimistic concurrency: only land this update if nothing changed since we read `a`.
-  const [u] = await d.update(schema.applications).set(patch)
+  // Optimistic concurrency: only land this update if nothing changed since we read `a`. This runs before
+  // the seat is claimed so a racing client-confirm + webhook can't both take a seat.
+  let [u] = await d.update(schema.applications).set(patch)
     .where(and(eq(schema.applications.id, a.id), eq(schema.applications.status, a.status), eq(schema.applications.amountPaid, a.amountPaid)))
     .returning();
   if (!u) return null;
+
+  let seatOk = true;
+  if (firstPayment && a.slotId) seatOk = await takeSeat(a.slotId);
+  if (!seatOk) {
+    [u] = await d.update(schema.applications)
+      .set({ staffNote: `${a.staffNote ? a.staffNote + "\n" : ""}⚠ Payment received but the slot was already full when the seat was claimed — reassign the batch or refund.` })
+      .where(eq(schema.applications.id, a.id)).returning();
+  }
 
   const first = a.name.split(" ")[0];
   if (fullyPaid) {

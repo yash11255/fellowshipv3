@@ -72,13 +72,18 @@ export async function releaseExpiredHolds(): Promise<number> {
       await d.update(schema.applications).set({ balanceDueAt: null }).where(eq(schema.applications.id, a.id));
       continue;
     }
-    await d.transaction(async (tx) => {
-      if (a.slotId) await tx.update(schema.programSlots).set({ confirmedCount: sql`greatest(${schema.programSlots.confirmedCount} - 1, 0)`, updatedAt: new Date() }).where(eq(schema.programSlots.id, a.slotId));
-      await tx.update(schema.applications).set({
+    const won = await d.transaction(async (tx) => {
+      // Claim the release first (conditional on the deadline still being set) so two concurrent sweeps
+      // can't both free the same seat.
+      const [w] = await tx.update(schema.applications).set({
         status: "withdrawn", balanceDueAt: null, updatedAt: new Date(),
         staffNote: `${a.staffNote ? a.staffNote + "\n" : ""}Seat auto-released on ${now.toLocaleDateString("en-IN")}: balance of ₹${(total - a.amountPaid).toLocaleString("en-IN")} wasn't paid by the deadline.`,
-      }).where(eq(schema.applications.id, a.id));
+      }).where(and(eq(schema.applications.id, a.id), isNotNull(schema.applications.balanceDueAt))).returning();
+      if (!w) return false;
+      if (a.slotId) await tx.update(schema.programSlots).set({ confirmedCount: sql`greatest(${schema.programSlots.confirmedCount} - 1, 0)`, updatedAt: new Date() }).where(eq(schema.programSlots.id, a.slotId));
+      return true;
     });
+    if (!won) continue;
     released++;
     const first = a.name.split(" ")[0];
     await sendEmail({ to: a.email, subject: `Seat released: ${a.number}`, text: `Hi ${first},\n\nWe hadn't received your balance payment by the deadline, so your seat${a.cohort ? ` for ${a.cohort}` : ""} has been released to the next applicant.\n\nStill want to join? Reply to this email or call +91 96506 20870 and we'll check the next available batch.\n\nArthroscopy College` }).catch(() => {});
