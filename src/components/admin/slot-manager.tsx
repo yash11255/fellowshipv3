@@ -14,13 +14,42 @@ const fmt = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { day: "n
 
 const STATUS_CLS: Record<string, string> = { open: "bg-[#cdfee1] text-[#0c5132]", closed: "bg-[#ebebeb] text-[#4a4a4a]", cancelled: "bg-[#ffd9d9] text-[#7a1212]" };
 
+/** ISO instant → value for <input type="datetime-local">, in India time. */
+const toIstInput = (iso: string | null) => {
+  if (!iso) return "";
+  const d = new Date(new Date(iso).getTime() + 5.5 * 3600_000);
+  return d.toISOString().slice(0, 16);
+};
+
 function SlotRow({ programSlug, s, onChanged }: { programSlug: string; s: SlotDTO; onChanged: () => void }) {
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
-  const [cap, setCap] = useState(String(s.capacity));
+  const [editing, setEditing] = useState(false);
   const seatsLeft = Math.max(0, s.capacity - s.confirmedCount);
-  const act = (fn: () => Promise<{ ok: boolean; error?: string }>) => start(async () => { const r = await fn(); if (!r.ok) setErr(r.error ?? "Failed"); else { setErr(null); onChanged(); } });
-  const saveCapacity = () => { const n = Number(cap); if (n > 0 && n !== s.capacity) act(() => updateSlot({ id: s.id, programSlug, capacity: n })); };
+  const act = (fn: () => Promise<{ ok: boolean; error?: string }>, after?: () => void) => start(async () => { const r = await fn(); if (!r.ok) setErr(r.error ?? "Failed"); else { setErr(null); after?.(); onChanged(); } });
+
+  if (editing) return (
+    <tr className="border-b border-[#f0f0f0] bg-[#fafafa] text-[13px]">
+      <td colSpan={5} className="px-3 py-3">
+        <form className="grid gap-3 md:grid-cols-6" onSubmit={(e) => {
+          e.preventDefault(); const f = new FormData(e.currentTarget); const g = (k: string) => String(f.get(k) ?? "");
+          act(() => updateSlot({ id: s.id, programSlug, label: g("label"), startDate: g("startDate"), endDate: g("endDate"), capacity: Number(g("capacity")), balanceDueDays: Number(g("balanceDueDays") || 0) }), () => setEditing(false));
+        }}>
+          <label className="block md:col-span-2"><span className="text-[12px] font-medium">Batch name</span><input name="label" required defaultValue={s.label} className={`${input} mt-1`} /></label>
+          <label className="block"><span className="text-[12px] font-medium">Starts (IST)</span><input name="startDate" type="datetime-local" required defaultValue={toIstInput(s.startDate)} className={`${input} mt-1`} /></label>
+          <label className="block"><span className="text-[12px] font-medium">Ends (optional)</span><input name="endDate" type="datetime-local" defaultValue={toIstInput(s.endDate)} className={`${input} mt-1`} /></label>
+          <label className="block"><span className="text-[12px] font-medium">Total seats</span><input name="capacity" type="number" required min={Math.max(1, s.confirmedCount)} defaultValue={s.capacity} className={`${input} mt-1`} /><span className="mt-0.5 block text-[11px] text-grey">{s.confirmedCount} already booked</span></label>
+          <label className="block"><span className="text-[12px] font-medium">Balance due (days)</span><input name="balanceDueDays" type="number" min={0} max={120} defaultValue={s.balanceDueDays} className={`${input} mt-1`} /></label>
+          <div className="flex flex-wrap items-center gap-2 md:col-span-6">
+            <button disabled={pending} className={btn}>{pending ? "Saving…" : "Save changes"}</button>
+            <button type="button" className={btnGhost} onClick={() => { setEditing(false); setErr(null); }}>Cancel</button>
+            {err && <span className="text-[12px] text-sale">{err}</span>}
+          </div>
+        </form>
+      </td>
+    </tr>
+  );
+
   return (
     <tr className="border-b border-[#f0f0f0] text-[13px]">
       <td className="px-3 py-2.5">
@@ -29,15 +58,14 @@ function SlotRow({ programSlug, s, onChanged }: { programSlug: string; s: SlotDT
         {err && <span className="mt-1 block text-[12px] text-sale">{err}</span>}
       </td>
       <td className="px-3 py-2.5">
-        <div className="flex items-center gap-1.5">
-          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ${seatsLeft === 0 ? "bg-[#ffd9d9] text-[#7a1212]" : "bg-[#f0f0f0]"}`}>{seatsLeft} of {s.capacity} left</span>
-          <input aria-label="Capacity" type="number" min={s.confirmedCount || 1} value={cap} onChange={(e) => setCap(e.target.value)} onBlur={saveCapacity} className="h-6 w-14 rounded border border-[#d4d4d4] px-1 text-[12px]" />
-        </div>
+        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ${seatsLeft === 0 ? "bg-[#ffd9d9] text-[#7a1212]" : seatsLeft <= 3 ? "bg-[#ffe3cf] text-[#8a3b00]" : "bg-[#f0f0f0]"}`}>{seatsLeft} of {s.capacity} left</span>
+        <span className="mt-0.5 block text-[11px] text-grey">{s.confirmedCount} booked</span>
       </td>
       <td className="px-3 py-2.5">{s.balanceDueDays}d</td>
       <td className="px-3 py-2.5"><span className={`rounded-full px-2 py-0.5 text-[12px] font-medium capitalize ${STATUS_CLS[s.status] ?? ""}`}>{s.status}</span></td>
       <td className="px-3 py-2.5">
         <div className="flex flex-wrap gap-1.5">
+          <button disabled={pending} className={btn} onClick={() => setEditing(true)}>Edit</button>
           {s.status === "open" ? (
             <button disabled={pending} className={btnGhost} onClick={() => act(() => setSlotStatus(s.id, programSlug, "closed"))}>Close</button>
           ) : s.status === "closed" ? (
