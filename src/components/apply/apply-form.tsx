@@ -4,9 +4,10 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import clsx from "clsx";
 import { submitApplication } from "@/lib/application-actions";
+import { BatchCalendar, type BatchOpt } from "./batch-calendar";
 
 type Opt = { slug: string; title: string; audience: string };
-type SlotOpt = { id: number; label: string; startDate: string; seatsLeft: number; capacity: number };
+type SlotOpt = BatchOpt;
 
 export function ApplyForm({ programs, initial, signedInEmail, slotsByProgram }: { programs: Opt[]; initial?: string; signedInEmail?: string; slotsByProgram: Record<string, SlotOpt[]> }) {
   const [email, setEmail] = useState(signedInEmail ?? "");
@@ -19,7 +20,6 @@ export function ApplyForm({ programs, initial, signedInEmail, slotsByProgram }: 
   const fe = (f: string) => (err?.field === f ? err.msg : undefined);
   const slots = slotsByProgram[program] ?? [];
   const chooseProgram = (slug: string) => { setProgram(slug); setSlotId(null); };
-  const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
   if (done) return (
     <div className="rounded-[32px] bg-navy p-8 text-white md:p-12">
@@ -55,22 +55,9 @@ export function ApplyForm({ programs, initial, signedInEmail, slotsByProgram }: 
         </div>
         {slots.length > 0 && (
           <div className="mt-5">
-            <p className="text-[14px] font-semibold">Choose a batch</p>
+            <p className="text-[14px] font-semibold">Upcoming batches: reserve your seat</p>
             <p className="text-[13px] text-ink/55">Only the deposit confirms your seat — batches can fill up before then.</p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              {slots.map((s) => {
-                const full = s.seatsLeft === 0;
-                return (
-                  <label key={s.id} className={clsx("flex cursor-pointer items-start justify-between gap-3 rounded-2xl border p-4 transition-colors", full ? "cursor-not-allowed border-ink/10 opacity-60" : slotId === s.id ? "border-ink bg-mist" : "border-ink/15 hover:border-ink/40")}>
-                    <span className="flex items-start gap-3">
-                      <input type="radio" name="slot" value={s.id} disabled={full} checked={slotId === s.id} onChange={() => setSlotId(s.id)} className="mt-1 size-4 accent-[#0f1526]" />
-                      <span><span className="block text-[14px] font-semibold">{s.label}</span><span className="text-[13px] text-ink/55">Starts {fmtDate(s.startDate)}</span></span>
-                    </span>
-                    <span className={clsx("shrink-0 rounded-full px-2.5 py-1 text-[12px] font-semibold", full ? "bg-ink/10 text-ink/50" : s.seatsLeft <= 2 ? "bg-[#ffe3cf] text-[#8a3b00]" : "bg-teal/20 text-ink")}>{full ? "Full" : `${s.seatsLeft} of ${s.capacity} left`}</span>
-                  </label>
-                );
-              })}
-            </div>
+            <BatchCalendar batches={slots} selected={slotId} onSelect={setSlotId} />
           </div>
         )}
       </fieldset>

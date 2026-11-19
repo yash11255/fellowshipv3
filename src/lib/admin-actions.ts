@@ -22,6 +22,10 @@ const StoreInput = z.object({
   codFee: z.number().int().min(0).max(5_000),
   codEnabled: z.boolean(),
   announcement: z.string().max(140),
+  leadEmails: z.string().max(500).default("").refine(
+    (v) => v.split(",").map((e) => e.trim()).filter(Boolean).every((e) => z.string().email().safeParse(e).success),
+    "Lead emails must be valid addresses, separated by commas",
+  ).transform((v) => v.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean).join(", ")),
 });
 
 async function upsert(key: string, value: unknown) {

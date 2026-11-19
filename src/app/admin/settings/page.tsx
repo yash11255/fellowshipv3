@@ -14,6 +14,7 @@ export default async function General() {
       target={{ kind: "store" }} initial={s}
       fields={[
         { name: "announcement", label: "Announcement bar text", type: "text", max: 140, help: "Shown at the top of every page, e.g. next cohort dates or an early-bird offer. Leave empty to hide." },
+        { name: "leadEmails", label: "Leads team emails", type: "text", max: 500, placeholder: "leads@example.com, sales@example.com", help: "Every application and contact/consultation form is emailed here with the full details. Separate several addresses with commas. Leave empty to turn off." },
       ]} />
   );
 }

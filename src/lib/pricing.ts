@@ -6,6 +6,8 @@ export type StoreSettings = {
   codFee: number;
   codEnabled: boolean;
   announcement: string;
+  /** Comma-separated inboxes that get a copy of every lead (applications, contact & consultation forms). */
+  leadEmails: string;
 };
 
 export const DEFAULT_SETTINGS: StoreSettings = {
@@ -14,6 +16,7 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   codFee: 49,
   codEnabled: true,
   announcement: "Enrol in the Fellowship and get the Advance ACL course free",
+  leadEmails: "",
 };
 
 export type AppliedDiscount = { code: string; amount: number; freeShipping: boolean; label: string };

@@ -60,3 +60,13 @@ export async function sendEmail({ to, subject, text, html }: { to: string; subje
     throw e;
   }
 }
+
+/** Sends a lead notification to the leads team inboxes configured in Admin → Settings → General. No-op when none are set. */
+export async function sendLeadEmail(subject: string, fields: [string, string | number | null | undefined][], note?: string) {
+  const { getSettings } = await import("./settings");
+  const to = (await getSettings()).leadEmails.split(",").map((e) => e.trim()).filter(Boolean);
+  if (!to.length) return;
+  const rows = fields.filter(([, v]) => v !== null && v !== undefined && String(v).trim() !== "").map(([k, v]) => `${k}: ${v}`);
+  const text = `New lead from the website.\n\n${rows.join("\n")}${note ? `\n\n${note}` : ""}\n\nReceived ${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST`;
+  await Promise.all(to.map((addr) => sendEmail({ to: addr, subject: `[Lead] ${subject}`, text }).catch(() => {})));
+}

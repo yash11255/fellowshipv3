@@ -16,7 +16,7 @@ async function Form({ searchParams }: { searchParams: PageProps<"/apply">["searc
   const initial = typeof sp.program === "string" && PROGRAMS.some((p) => p.slug === sp.program) ? sp.program : undefined;
   const user = await currentUser();
   const slotsByProgram = Object.fromEntries(await Promise.all(PROGRAMS.map(async (p) => [p.slug, (await getOpenSlots(p.slug)).map((s) => ({
-    id: s.id, label: s.label, startDate: s.startDate.toISOString(), seatsLeft: seatsLeft(s), capacity: s.capacity,
+    id: s.id, label: s.label, startDate: s.startDate.toISOString(), endDate: s.endDate?.toISOString() ?? null, seatsLeft: seatsLeft(s), capacity: s.capacity,
   }))])));
   return <ApplyForm signedInEmail={user?.email} programs={PROGRAMS.map((p) => ({ slug: p.slug, title: p.title, audience: p.audience }))} initial={initial} slotsByProgram={slotsByProgram} />;
 }

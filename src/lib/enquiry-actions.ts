@@ -4,7 +4,7 @@ import { z } from "zod";
 import crypto from "node:crypto";
 import { and, eq, gte, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
-import { sendEmail } from "./email";
+import { sendEmail, sendLeadEmail } from "./email";
 
 const PHONE = /^(\+91[\s-]?)?[6-9]\d{9}$/;
 const Input = z.object({
@@ -36,6 +36,10 @@ export async function submitEnquiry(raw: z.input<typeof Input>) {
     subject: p.data.kind === "clinic" ? `New consultation request: ${p.data.service ?? "General"}` : `New contact message from ${p.data.name}`,
     text: `${p.data.name} <${p.data.email}> ${p.data.phone ?? ""}\n${p.data.service ? `Service: ${p.data.service}\n` : ""}${p.data.preferredDate ? `Preferred date: ${p.data.preferredDate}\n` : ""}\n${p.data.message}`,
   }).catch(() => {});
+  await sendLeadEmail(p.data.kind === "clinic" ? `Consultation request: ${p.data.service ?? "General"} (${p.data.name})` : `Contact form: ${p.data.name}`, [
+    ["Form", p.data.kind === "clinic" ? "Consultation request" : "Contact us"], ["Name", p.data.name], ["Email", p.data.email.toLowerCase()],
+    ["Phone", p.data.phone], ["Service", p.data.service], ["Preferred date", p.data.preferredDate], ["Message", p.data.message],
+  ]).catch(() => {});
   await sendEmail({
     to: p.data.email.toLowerCase(),
     subject: "We've received your message",

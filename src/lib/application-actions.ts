@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import { db, schema } from "@/db";
 import { currentUser } from "./auth";
 import { requireStaff } from "./admin";
-import { sendEmail } from "./email";
+import { sendEmail, sendLeadEmail } from "./email";
 import { inr } from "./programs";
 import { getProgramBySlug } from "./program-store";
 import { getSlot, releaseSeat, seatsLeft, takeSeat } from "./slots";
@@ -67,6 +67,12 @@ export async function submitApplication(raw: z.input<typeof Apply>) {
       text: `Hi ${p.data.name.split(" ")[0]},\n\nThanks for applying to the ${program.title}${cohort ? ` (${cohort} batch)` : ""}. Your application number is ${app.number}.\nOur coordinator will review it and call you within 2 working days.\n\nTrack it any time: sign in at /account with this email.\n\nArthroscopy College\n+91 96506 20870` }).catch(() => {}),
     sendEmail({ to: process.env.TEAM_EMAIL ?? "orthosportin@gmail.com", subject: `New application ${app.number}: ${program.title}`,
       text: `${p.data.name} · ${email} · ${p.data.phone} · ${p.data.country}\n${p.data.qualification}${p.data.institution ? ` @ ${p.data.institution}` : ""} · ${p.data.experienceYears ?? "?"} yrs\nPreferred start: ${p.data.preferredStart ?? "-"}${cohort ? `\nRequested batch: ${cohort}` : ""}\nCV: ${p.data.cvLink ?? "-"}\n\n${p.data.message}` }).catch(() => {}),
+    sendLeadEmail(`Application ${app.number}: ${program.title} (${p.data.name})`, [
+      ["Form", "Programme application"], ["Application no.", app.number], ["Programme", program.title], ["Batch", cohort],
+      ["Name", p.data.name], ["Email", email], ["Phone", p.data.phone], ["Country", p.data.country],
+      ["Qualification", p.data.qualification], ["Institution", p.data.institution], ["Experience (years)", p.data.experienceYears],
+      ["Preferred start", p.data.preferredStart], ["CV", p.data.cvLink], ["Message", p.data.message],
+    ], `Open in admin: ${process.env.SITE_URL ?? ""}/admin/applications/${app.number}`).catch(() => {}),
   ]);
   return { ok: true as const, number: app.number };
 }
