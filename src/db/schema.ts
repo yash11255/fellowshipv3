@@ -223,6 +223,21 @@ export const checkoutDrafts = pgTable("checkout_drafts", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// ── Programme slots (admin-defined batches with a seat cap) ─────
+export const programSlots = pgTable("program_slots", {
+  id: serial("id").primaryKey(),
+  programSlug: text("program_slug").notNull(),
+  label: text("label").notNull(),                      // "December 2026 · Gurugram"
+  startDate: timestamp("start_date", { withTimezone: true }).notNull(),
+  endDate: timestamp("end_date", { withTimezone: true }),
+  capacity: integer("capacity").notNull(),
+  confirmedCount: integer("confirmed_count").notNull().default(0),   // seats locked by a paid deposit
+  balanceDueDays: integer("balance_due_days").notNull().default(14), // days after the deposit to clear the balance
+  status: text("status").notNull().default("open"),    // open | closed | cancelled
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("slots_program").on(t.programSlug, t.status)]);
+
 // ── Applications (fellowship / course enrolment) ────────────────
 export const applicationStatus = pgEnum("application_status", ["new", "reviewing", "accepted", "rejected", "paid", "enrolled", "withdrawn"]);
 
@@ -248,7 +263,10 @@ export const applications = pgTable("applications", {
   razorpayOrderId: text("razorpay_order_id"),
   razorpayPaymentId: text("razorpay_payment_id"),
   paidAt: timestamp("paid_at", { withTimezone: true }),
-  cohort: text("cohort"),                             // assigned batch, e.g. "Dec 2026"
+  cohort: text("cohort"),                             // assigned batch, e.g. "Dec 2026" (auto-filled from the slot, if one is picked)
+  slotId: integer("slot_id").references(() => programSlots.id, { onDelete: "set null" }),
+  amountPaid: integer("amount_paid").notNull().default(0),           // cumulative INR received (deposit + balance)
+  balanceDueAt: timestamp("balance_due_at", { withTimezone: true }), // deadline for the remaining balance; past this the seat auto-releases
   staffNote: text("staff_note"),
   userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

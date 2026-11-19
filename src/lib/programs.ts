@@ -21,6 +21,7 @@ export type Program = {
   nextDates?: string[];                                       // upcoming batches, e.g. "10–14 Dec 2026"
   card?: { name: string; line: string; meta: string; tags: string[] }; // homepage showcase
   gallery?: string[];                                         // extra photos on the programme page
+  sale?: { percent: number; startsAt: string; endsAt: string; label?: string }; // time-bound % off; startsAt/endsAt are ISO datetimes
 };
 
 export const PROGRAMS: Program[] = [

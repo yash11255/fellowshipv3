@@ -6,7 +6,9 @@ import { db, schema } from "@/db";
 import { requireStaff } from "@/lib/admin";
 import { Card, dateTime, inr } from "@/components/admin/ui";
 import { getProgramBySlug } from "@/lib/program-store";
-import { ApplicationDecision } from "@/components/admin/application-decision";
+import { getAllSlots, seatsLeft } from "@/lib/slots";
+import { ApplicationDecision, type SlotOption } from "@/components/admin/application-decision";
+import { ReleaseSeatButton } from "@/components/admin/release-seat-button";
 import { STATUS_BADGE } from "@/lib/application-status";
 
 export default async function Application({ params }: PageProps<"/admin/applications/[number]">) {
@@ -16,6 +18,10 @@ export default async function Application({ params }: PageProps<"/admin/applicat
   const [a] = await (await db()).select().from(schema.applications).where(eq(schema.applications.number, number)).limit(1);
   if (!a) notFound();
   const p = await getProgramBySlug(a.programSlug);
+  const slotRows = await getAllSlots(a.programSlug);
+  const slots: SlotOption[] = slotRows.map((s) => ({ id: s.id, label: s.label, startDate: s.startDate.toISOString(), seatsLeft: seatsLeft(s), capacity: s.capacity, status: s.status }));
+  const total = Math.round((a.feeAmount ?? 0) * (1 + a.gstRate / 100));
+  const balance = total - a.amountPaid;
   const intl = !/^india$/i.test(a.country.trim());
   const defaultFee = a.feeAmount ?? (p?.fee.length ? (intl && p.fee[1] ? p.fee[1].amount : p.fee[0].amount) : null);
   const base = process.env.SITE_URL ?? "http://localhost:3200";
@@ -40,13 +46,19 @@ export default async function Application({ params }: PageProps<"/admin/applicat
           {a.message && <Card title="Message"><p className="whitespace-pre-line p-4 text-[13px]">{a.message}</p></Card>}
           {(a.feeAmount || a.paidAt) && (
             <Card title="Payment"><dl className="divide-y divide-[#f0f0f0] text-[13px]">
-              <div className="grid grid-cols-[160px_1fr] px-4 py-2.5"><dt className="text-grey">Fee</dt><dd>{inr(a.feeAmount ?? 0)} + {a.gstRate}% GST</dd></div>
-              <div className="grid grid-cols-[160px_1fr] px-4 py-2.5"><dt className="text-grey">Payable via link</dt><dd>{inr(a.payNow ?? 0)}</dd></div>
-              <div className="grid grid-cols-[160px_1fr] px-4 py-2.5"><dt className="text-grey">Paid</dt><dd>{a.paidAt ? `${dateTime(a.paidAt)} · ${a.razorpayPaymentId}` : "Not yet"}</dd></div>
-            </dl></Card>
+              <div className="grid grid-cols-[160px_1fr] px-4 py-2.5"><dt className="text-grey">Fee</dt><dd>{inr(a.feeAmount ?? 0)} + {a.gstRate}% GST = {inr(total)}</dd></div>
+              <div className="grid grid-cols-[160px_1fr] px-4 py-2.5"><dt className="text-grey">Paid so far</dt><dd>{inr(a.amountPaid)}{a.paidAt ? ` · last on ${dateTime(a.paidAt)} (${a.razorpayPaymentId})` : ""}</dd></div>
+              {a.status === "paid" && balance > 0 ? (
+                <div className="grid grid-cols-[160px_1fr] px-4 py-2.5"><dt className="text-grey">Balance due</dt><dd className="font-medium text-[#8a5a00]">{inr(balance)}{a.balanceDueAt ? ` by ${dateTime(a.balanceDueAt)} — seat auto-releases after this if unpaid` : ""}</dd></div>
+              ) : (
+                <div className="grid grid-cols-[160px_1fr] px-4 py-2.5"><dt className="text-grey">Payable via link</dt><dd>{inr(a.payNow ?? 0)}</dd></div>
+              )}
+            </dl>
+            {a.slotId && a.status === "paid" && balance === 0 && <div className="border-t border-[#f0f0f0] p-4"><ReleaseSeatButton id={a.id} /></div>}
+            </Card>
           )}
         </div>
-        <Card title="Decision"><ApplicationDecision id={a.id} status={a.status} defaultFee={defaultFee} deposit={p?.deposit ?? 100} cohort={a.cohort ?? ""} note={a.staffNote ?? ""} payLink={a.paymentToken ? `${base}/pay/${a.paymentToken}` : null} /></Card>
+        <Card title="Decision"><ApplicationDecision id={a.id} status={a.status} defaultFee={defaultFee} deposit={p?.deposit ?? 100} cohort={a.cohort ?? ""} note={a.staffNote ?? ""} payLink={a.paymentToken ? `${base}/pay/${a.paymentToken}` : null} slots={slots} slotId={a.slotId} /></Card>
       </div>
     </>
   );

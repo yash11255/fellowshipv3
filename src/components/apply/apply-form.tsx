@@ -6,15 +6,20 @@ import clsx from "clsx";
 import { submitApplication } from "@/lib/application-actions";
 
 type Opt = { slug: string; title: string; audience: string };
+type SlotOpt = { id: number; label: string; startDate: string; seatsLeft: number; capacity: number };
 
-export function ApplyForm({ programs, initial, signedInEmail }: { programs: Opt[]; initial?: string; signedInEmail?: string }) {
+export function ApplyForm({ programs, initial, signedInEmail, slotsByProgram }: { programs: Opt[]; initial?: string; signedInEmail?: string; slotsByProgram: Record<string, SlotOpt[]> }) {
   const [email, setEmail] = useState(signedInEmail ?? "");
   const [appliedEmail, setAppliedEmail] = useState("");
   const [program, setProgram] = useState(initial ?? programs[0].slug);
+  const [slotId, setSlotId] = useState<number | null>(null);
   const [err, setErr] = useState<{ msg: string; field?: string } | null>(null);
   const [done, setDone] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const fe = (f: string) => (err?.field === f ? err.msg : undefined);
+  const slots = slotsByProgram[program] ?? [];
+  const chooseProgram = (slug: string) => { setProgram(slug); setSlotId(null); };
+  const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
   if (done) return (
     <div className="rounded-[32px] bg-navy p-8 text-white md:p-12">
@@ -33,7 +38,7 @@ export function ApplyForm({ programs, initial, signedInEmail }: { programs: Opt[
       e.preventDefault(); const f = new FormData(e.currentTarget); const g = (k: string) => String(f.get(k) ?? "").trim();
       setErr(null);
       start(async () => {
-        const r = await submitApplication({ programSlug: program, name: g("name"), email: g("email"), phone: g("phone"), country: g("country") || "India", qualification: g("qualification"),
+        const r = await submitApplication({ programSlug: program, slotId, name: g("name"), email: g("email"), phone: g("phone"), country: g("country") || "India", qualification: g("qualification"),
           institution: g("institution"), experienceYears: g("experience") ? Number(g("experience")) : null, preferredStart: g("start"), cvLink: g("cv"), message: g("message"), website: g("website") });
         if (r.ok) { setAppliedEmail(g("email").toLowerCase()); setDone(r.number); window.scrollTo({ top: 0, behavior: "smooth" }); } else setErr({ msg: r.error, field: "field" in r ? r.field : undefined });
       });
@@ -43,11 +48,31 @@ export function ApplyForm({ programs, initial, signedInEmail }: { programs: Opt[
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
           {programs.map((p) => (
             <label key={p.slug} className={clsx("flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-colors", program === p.slug ? "border-ink bg-mist" : "border-ink/15 hover:border-ink/40")}>
-              <input type="radio" name="program" value={p.slug} checked={program === p.slug} onChange={() => setProgram(p.slug)} className="mt-1 size-4 accent-[#0f1526]" />
+              <input type="radio" name="program" value={p.slug} checked={program === p.slug} onChange={() => chooseProgram(p.slug)} className="mt-1 size-4 accent-[#0f1526]" />
               <span><span className="block text-[15px] font-semibold">{p.title}</span><span className="text-[13px] text-ink/55">{p.audience}</span></span>
             </label>
           ))}
         </div>
+        {slots.length > 0 && (
+          <div className="mt-5">
+            <p className="text-[14px] font-semibold">Choose a batch</p>
+            <p className="text-[13px] text-ink/55">Only the deposit confirms your seat — batches can fill up before then.</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {slots.map((s) => {
+                const full = s.seatsLeft === 0;
+                return (
+                  <label key={s.id} className={clsx("flex cursor-pointer items-start justify-between gap-3 rounded-2xl border p-4 transition-colors", full ? "cursor-not-allowed border-ink/10 opacity-60" : slotId === s.id ? "border-ink bg-mist" : "border-ink/15 hover:border-ink/40")}>
+                    <span className="flex items-start gap-3">
+                      <input type="radio" name="slot" value={s.id} disabled={full} checked={slotId === s.id} onChange={() => setSlotId(s.id)} className="mt-1 size-4 accent-[#0f1526]" />
+                      <span><span className="block text-[14px] font-semibold">{s.label}</span><span className="text-[13px] text-ink/55">Starts {fmtDate(s.startDate)}</span></span>
+                    </span>
+                    <span className={clsx("shrink-0 rounded-full px-2.5 py-1 text-[12px] font-semibold", full ? "bg-ink/10 text-ink/50" : s.seatsLeft <= 2 ? "bg-[#ffe3cf] text-[#8a3b00]" : "bg-teal/20 text-ink")}>{full ? "Full" : `${s.seatsLeft} of ${s.capacity} left`}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </fieldset>
 
       <fieldset className="space-y-4">

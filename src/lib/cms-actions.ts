@@ -31,6 +31,7 @@ const ProgramInput = z.object({
   nextDates: list(80, 12).optional(),
   gallery: list(300, 24).optional(),
   card: z.object({ name: str(60), line: str(160), meta: str(60), tags: list(40, 6) }).optional(),
+  sale: z.object({ percent: z.coerce.number().int().min(0).max(90), startsAt: str(40), endsAt: str(40), label: str(120).optional() }).optional(),
   confirm: str(400).optional(),
 });
 

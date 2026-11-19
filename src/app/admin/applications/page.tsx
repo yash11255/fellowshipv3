@@ -6,12 +6,14 @@ import { db, schema } from "@/db";
 import { requireStaff } from "@/lib/admin";
 import { Card, PageHeader, dateTime } from "@/components/admin/ui";
 import { getAllPrograms } from "@/lib/program-store";
+import { releaseExpiredHolds } from "@/lib/slots";
 
 export const metadata = { title: "Applications" };
 
 export default async function Applications({ searchParams }: PageProps<"/admin/applications">) {
   await connection();
   await requireStaff("support");
+  await releaseExpiredHolds(); // no cron in this app — sweep overdue balances whenever staff look at the list
   const sp = await searchParams;
   const f = typeof sp.status === "string" ? sp.status : "";
   const d = await db();
@@ -39,7 +41,12 @@ export default async function Applications({ searchParams }: PageProps<"/admin/a
                   <td className="px-4 py-2.5"><p className="font-medium">{a.name}</p><p className="text-[12px] text-grey">{a.email} · {a.country}</p></td>
                   <td className="px-4 py-2.5">{progs.find((x) => x.slug === a.programSlug)?.title ?? a.programSlug}</td>
                   <td className="px-4 py-2.5 text-grey">{a.qualification}{a.experienceYears !== null ? ` · ${a.experienceYears} yrs` : ""}</td>
-                  <td className="px-4 py-2.5"><span className={`rounded-full px-2 py-0.5 text-[12px] font-medium capitalize ${STATUS_BADGE[a.status]}`}>{a.status}</span></td>
+                  <td className="px-4 py-2.5">
+                    <span className={`rounded-full px-2 py-0.5 text-[12px] font-medium capitalize ${STATUS_BADGE[a.status]}`}>{a.status}</span>
+                    {a.status === "paid" && a.balanceDueAt && (
+                      <p className="mt-1 text-[12px] text-[#8a5a00]">Balance due {dateTime(a.balanceDueAt)}</p>
+                    )}
+                  </td>
                 </tr>
               ))}
               {rows.length === 0 && <tr><td colSpan={5} className="px-4 py-10 text-center text-grey">No applications yet.</td></tr>}

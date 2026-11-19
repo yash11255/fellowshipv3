@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { PROGRAMS, inr, FAQS } from "@/lib/programs";
 import { getPrograms, getProgramBySlug } from "@/lib/program-store";
+import { effectiveFees, saleActive } from "@/lib/sale";
+import { getOpenSlots, seatsLeft } from "@/lib/slots";
 import { FEATURED_VIDEOS } from "@/lib/videos";
 import { getSeo } from "@/lib/settings";
 import { Reveal } from "@/components/college/reveal";
@@ -12,6 +14,7 @@ import { Parallax } from "@/components/college/parallax";
 import { Curriculum } from "@/components/college/curriculum";
 import { FilmTheatre } from "@/components/college/film-theatre";
 import { PhotoWall, COLLEGE_PHOTOS, type Photo } from "@/components/college/photo-wall";
+import { SaleCountdown } from "@/components/college/sale-countdown";
 
 type P = PageProps<"/programs/[slug]">;
 export function generateStaticParams() { return PROGRAMS.map((p) => ({ slug: p.slug })); }
@@ -46,6 +49,11 @@ async function ProgramBody({ params }: { params: P["params"] }) {
     hasCourseInstance: { "@type": "CourseInstance", courseMode: p.format.startsWith("Online") ? "online" : "onsite", location: "Gurugram, Haryana, India", courseWorkload: p.duration },
   };
   const facts = [["Duration", p.duration], ["Format", p.format], ["For", p.audience], ...(p.schedule ? [["Runs", p.schedule]] : [])];
+  const fees = effectiveFees(p);
+  const onSale = saleActive(p);
+  const openSlots = await getOpenSlots(p.slug);
+  const totalSeatsLeft = openSlots.reduce((n, s) => n + seatsLeft(s), 0);
+  const soonestSlot = openSlots[0];
   const others = (await getPrograms()).filter((o) => o.slug !== p.slug).slice(0, 3);
   const films = FEATURED_VIDEOS.map((v) => ({ id: v.id, title: v.title }));
   const surgeon = !p.slug.includes("physio") && !p.slug.includes("rehab");
@@ -64,6 +72,9 @@ async function ProgramBody({ params }: { params: P["params"] }) {
             <Link href={apply} className="inline-flex h-13 items-center rounded-full bg-ink px-7 text-[15px] font-semibold text-white transition-colors hover:bg-brand">Apply now</Link>
             <a href={WA} target="_blank" rel="noopener noreferrer" className="inline-flex h-13 items-center rounded-full border border-ink/15 px-7 text-[15px] font-medium transition-colors hover:border-ink">Ask on WhatsApp</a>
           </div>
+          {openSlots.length > 0 && (
+            <p className="mt-5 flex items-center gap-2 text-[14px] font-semibold text-[#8a3b00]"><span className="live-dot" />{totalSeatsLeft === 0 ? "All upcoming batches are full — apply to join the waitlist" : `Only ${totalSeatsLeft} seat${totalSeatsLeft === 1 ? "" : "s"} left across upcoming batches`}{soonestSlot && seatsLeft(soonestSlot) > 0 ? ` · next batch ${soonestSlot.label}` : ""}</p>
+          )}
           {p.nextDates && p.nextDates.length > 0 && (
             <div className="mt-8 flex flex-wrap items-center gap-2">
               <span className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.14em] text-ink/50"><span className="live-dot" />Next batches</span>
@@ -146,11 +157,14 @@ async function ProgramBody({ params }: { params: P["params"] }) {
               </ol>
             </div>
             <div className="flex flex-col justify-between gap-10 bg-ink p-8 text-white md:p-12">
-              {p.fee.length ? (
-                <ul className="space-y-6">{p.fee.map((f) => (
+              {onSale && (
+                <p className="-mb-4 inline-flex items-center gap-2 self-start rounded-full bg-teal px-3 py-1 text-[13px] font-semibold text-ink">{p.sale?.label || `${p.sale?.percent}% off`}{p.sale?.endsAt && <SaleCountdown endsAt={p.sale.endsAt} />}</p>
+              )}
+              {fees.length ? (
+                <ul className="space-y-6">{fees.map((f) => (
                   <li key={f.label} className="flex flex-wrap items-baseline justify-between gap-2 border-b border-white/10 pb-6">
                     <span className="text-[15px] text-white/60">{f.label}</span>
-                    <span className="text-[clamp(2rem,1.5rem+1.6vw,3rem)] font-semibold tracking-[-0.04em]">{inr(f.amount)}<span className="ml-2 text-[14px] font-normal tracking-normal text-white/50">{f.note}</span></span>
+                    <span className="text-[clamp(2rem,1.5rem+1.6vw,3rem)] font-semibold tracking-[-0.04em]">{f.original ? <span className="mr-2 text-[18px] font-normal text-white/40 line-through">{inr(f.original)}</span> : null}{inr(f.amount)}<span className="ml-2 text-[14px] font-normal tracking-normal text-white/50">{f.note}</span></span>
                   </li>
                 ))}</ul>
               ) : <p className="text-[22px] font-medium leading-snug">Fees are shared by our coordinator after you apply.</p>}
@@ -209,7 +223,7 @@ async function ProgramBody({ params }: { params: P["params"] }) {
 
       {/* Mobile apply bar */}
       <div className="sticky bottom-0 z-30 flex items-center gap-3 border-t border-ink/10 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
-        <div className="min-w-0 flex-1"><p className="truncate text-[14px] font-semibold">{p.title}</p><p className="text-[13px] text-ink/55">{p.fee[0] ? `From ${inr(p.fee[0].amount)}` : p.duration}</p></div>
+        <div className="min-w-0 flex-1"><p className="truncate text-[14px] font-semibold">{p.title}</p><p className="text-[13px] text-ink/55">{fees[0] ? `From ${inr(fees[0].amount)}` : p.duration}</p></div>
         <Link href={apply} className="inline-flex h-11 items-center rounded-full bg-ink px-5 text-[14px] font-semibold text-white">Apply</Link>
       </div>
     </div>

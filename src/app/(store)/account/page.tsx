@@ -32,13 +32,25 @@ function NextStep({ a }: { a: App }) {
       <Link href={`/pay/${a.paymentToken}`} className="mt-5 inline-flex h-12 items-center rounded-full bg-teal px-6 text-[15px] font-semibold text-ink">Pay now</Link>
     </div>
   );
-  if (a.status === "paid") return (
-    <div className={`${box} bg-[#e6f6ec]`}>
-      <p className="text-[13px] font-medium uppercase tracking-[0.16em] text-[#0c5132]">You&apos;re in</p>
-      <p className="mt-2 text-[24px] font-semibold tracking-[-0.02em]">Your seat is reserved{a.cohort ? ` for ${a.cohort}` : ""}.</p>
-      <p className="mt-2 text-ink/65">Our coordinator will share joining dates, reporting time and what to bring. The balance is payable on joining.</p>
-    </div>
-  );
+  if (a.status === "paid") {
+    const total = a.feeAmount ? Math.round(a.feeAmount * (1 + a.gstRate / 100)) : 0;
+    const balance = total - a.amountPaid;
+    if (balance > 0 && a.paymentToken) return (
+      <div className={`${box} bg-navy text-white`}>
+        <p className="text-[13px] font-medium uppercase tracking-[0.16em] text-teal">Next step</p>
+        <p className="mt-2 text-[24px] font-semibold tracking-[-0.02em]">Pay {inr(balance)} balance to confirm fully</p>
+        <p className="mt-2 text-white/70">Your deposit is in{a.cohort ? ` for ${a.cohort}` : ""}.{a.balanceDueAt ? ` Pay by ${date(a.balanceDueAt)} or the seat is released.` : ""}</p>
+        <Link href={`/pay/${a.paymentToken}`} className="mt-5 inline-flex h-12 items-center rounded-full bg-teal px-6 text-[15px] font-semibold text-ink">Pay balance</Link>
+      </div>
+    );
+    return (
+      <div className={`${box} bg-[#e6f6ec]`}>
+        <p className="text-[13px] font-medium uppercase tracking-[0.16em] text-[#0c5132]">You&apos;re in</p>
+        <p className="mt-2 text-[24px] font-semibold tracking-[-0.02em]">Your seat is reserved{a.cohort ? ` for ${a.cohort}` : ""}.</p>
+        <p className="mt-2 text-ink/65">Our coordinator will share joining dates, reporting time and what to bring.</p>
+      </div>
+    );
+  }
   if (a.status === "enrolled") return <div className={`${box} bg-mist`}><p className="text-[24px] font-semibold tracking-[-0.02em]">You&apos;re enrolled. See you in Gurugram!</p></div>;
   if (a.status === "rejected" || a.status === "withdrawn") return <div className={`${box} bg-mist`}><p className="text-[20px] font-semibold">{a.status === "rejected" ? "We couldn't offer a seat this time." : "This application was withdrawn."}</p><Link href="/apply" className="mt-4 inline-flex h-11 items-center rounded-full bg-ink px-5 text-[14px] font-semibold text-white">Apply for another cohort</Link></div>;
   return (
@@ -82,9 +94,9 @@ function AppCard({ a, p }: { a: App; p?: Program }) {
           {total ? (
             <dl className="mt-3 space-y-2 text-[14px]">
               <div className="flex justify-between"><dt className="text-ink/60">Programme fee + {a.gstRate}% GST</dt><dd className="font-semibold">{inr(total)}</dd></div>
-              <div className="flex justify-between"><dt className="text-ink/60">{a.paidAt ? "Paid" : "Due to reserve"}</dt><dd className="font-semibold">{inr(a.payNow ?? 0)}</dd></div>
-              {a.paidAt && <div className="flex justify-between"><dt className="text-ink/60">Balance on joining</dt><dd className="font-semibold">{inr(Math.max(0, total - (a.payNow ?? 0)))}</dd></div>}
-              {a.paidAt && <p className="pt-2 text-[12px] text-ink/45">Paid {date(a.paidAt)} · ref {a.razorpayPaymentId}</p>}
+              <div className="flex justify-between"><dt className="text-ink/60">{a.amountPaid > 0 ? "Paid" : "Due to reserve"}</dt><dd className="font-semibold">{inr(a.amountPaid > 0 ? a.amountPaid : (a.payNow ?? 0))}</dd></div>
+              {a.amountPaid > 0 && total - a.amountPaid > 0 && <div className="flex justify-between"><dt className="text-ink/60">Balance{a.balanceDueAt ? ` due ${date(a.balanceDueAt)}` : ""}</dt><dd className="font-semibold">{inr(total - a.amountPaid)}</dd></div>}
+              {a.paidAt && <p className="pt-2 text-[12px] text-ink/45">Last paid {date(a.paidAt)} · ref {a.razorpayPaymentId}</p>}
             </dl>
           ) : <p className="mt-3 text-[14px] text-ink/60">Shared by our coordinator after review.</p>}
           <a href={`${WA}${a.number}`} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex text-[14px] font-semibold text-brand hover:underline">Message your coordinator →</a>

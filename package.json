@@ -10,7 +10,7 @@
     "db:push": "drizzle-kit push --force",
     "db:seed": "tsx scripts/seed-programs.mts && node scripts/import-wp.mjs && node scripts/seed-legal.mjs",
     "db:studio": "drizzle-kit studio",
-    "db:setup": "pnpm db:push && node scripts/migrate-0007-seo.mjs && node scripts/migrate-0008-programs.mjs && node scripts/migrate-0009-email-log.mjs && node scripts/migrate-0010-passwords.mjs && pnpm db:seed"
+    "db:setup": "pnpm db:push && node scripts/migrate-0007-seo.mjs && node scripts/migrate-0008-programs.mjs && node scripts/migrate-0009-email-log.mjs && node scripts/migrate-0010-passwords.mjs && node scripts/migrate-0011-slots.mjs && pnpm db:seed"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.15",
