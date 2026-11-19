@@ -53,13 +53,17 @@ export function ApplyForm({ programs, initial, signedInEmail, slotsByProgram }: 
             </label>
           ))}
         </div>
-        {slots.length > 0 && (
-          <div className="mt-5">
-            <p className="text-[14px] font-semibold">Upcoming batches: reserve your seat</p>
-            <p className="text-[13px] text-ink/55">Only the deposit confirms your seat — batches can fill up before then.</p>
-            <BatchCalendar batches={slots} selected={slotId} onSelect={setSlotId} />
-          </div>
-        )}
+        <div className="mt-6">
+          <p className="text-[16px] font-semibold">Upcoming batches: reserve your seat</p>
+          {slots.length > 0 ? (
+            <>
+              <p className="text-[13px] text-ink/55">Pick a start date. Only the deposit confirms your seat; batches can fill up before then.</p>
+              <BatchCalendar batches={slots} selected={slotId} onSelect={setSlotId} />
+            </>
+          ) : (
+            <p className="mt-3 rounded-2xl border border-dashed border-ink/20 bg-mist/60 p-4 text-[14px] text-ink/65">New batches for this programme are being scheduled. Apply now and our coordinator will allot you the next available batch.</p>
+          )}
+        </div>
       </fieldset>
 
       <fieldset className="space-y-4">
