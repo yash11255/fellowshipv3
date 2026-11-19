@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { totalOf } from "@/lib/fee-math";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { desc, eq, or } from "drizzle-orm";
@@ -20,7 +21,7 @@ const WA = "https://wa.me/919650620870?text=Hi%2C%20my%20application%20number%20
 type App = typeof schema.applications.$inferSelect;
 const STAGES = ["Applied", "Accepted", "Seat reserved", "Enrolled"];
 const STAGE: Record<App["status"], number> = { new: 1, reviewing: 1, accepted: 2, paid: 3, enrolled: 4, rejected: 0, withdrawn: 0 };
-const LABEL: Record<App["status"], string> = { new: "Received", reviewing: "Under review", accepted: "Accepted, payment due", paid: "Seat reserved", enrolled: "Enrolled", rejected: "Not selected", withdrawn: "Withdrawn" };
+const LABEL: Record<App["status"], string> = { new: "Received", reviewing: "Under review", accepted: "Accepted, payment due", paid: "Deposit paid · seat reserved", enrolled: "Payment captured · enrolled", rejected: "Not selected", withdrawn: "Withdrawn" };
 
 function NextStep({ a }: { a: App }) {
   const box = "rounded-[24px] p-6 md:p-8";
@@ -33,7 +34,7 @@ function NextStep({ a }: { a: App }) {
     </div>
   );
   if (a.status === "paid") {
-    const total = a.feeAmount ? Math.round(a.feeAmount * (1 + a.gstRate / 100)) : 0;
+    const total = a.feeAmount ? totalOf(a) : 0;
     const balance = total - a.amountPaid;
     if (balance > 0 && a.paymentToken) return (
       <div className={`${box} bg-navy text-white`}>
@@ -51,7 +52,14 @@ function NextStep({ a }: { a: App }) {
       </div>
     );
   }
-  if (a.status === "enrolled") return <div className={`${box} bg-mist`}><p className="text-[24px] font-semibold tracking-[-0.02em]">You&apos;re enrolled. See you in Gurugram!</p></div>;
+  if (a.status === "enrolled") return (
+    <div className={`${box} bg-[#e6f6ec]`}>
+      <p className="text-[13px] font-medium uppercase tracking-[0.16em] text-[#0c5132]">✓ Payment captured</p>
+      <p className="mt-2 text-[24px] font-semibold tracking-[-0.02em]">You&apos;re enrolled{a.cohort ? ` in the ${a.cohort} batch` : ""}. See you in Gurugram!</p>
+      <p className="mt-2 text-ink/65">Your fee is fully paid. Our coordinator will share joining dates, reporting time and what to bring.</p>
+      {a.paymentToken && <Link href={`/pay/${a.paymentToken}`} className="mt-5 inline-flex h-11 items-center rounded-full bg-ink px-5 text-[14px] font-semibold text-white">View invoices</Link>}
+    </div>
+  );
   if (a.status === "rejected" || a.status === "withdrawn") return <div className={`${box} bg-mist`}><p className="text-[20px] font-semibold">{a.status === "rejected" ? "We couldn't offer a seat this time." : "This application was withdrawn."}</p><Link href="/apply" className="mt-4 inline-flex h-11 items-center rounded-full bg-ink px-5 text-[14px] font-semibold text-white">Apply for another cohort</Link></div>;
   return (
     <div className={`${box} bg-mist`}>
@@ -64,7 +72,7 @@ function NextStep({ a }: { a: App }) {
 
 function AppCard({ a, p }: { a: App; p?: Program }) {
   const stage = STAGE[a.status];
-  const total = a.feeAmount ? Math.round(a.feeAmount * (1 + a.gstRate / 100)) : null;
+  const total = a.feeAmount ? totalOf(a) : null;
   return (
     <article className="overflow-hidden rounded-[32px] border border-ink/10">
       <div className="grid md:grid-cols-[260px_1fr]">
@@ -97,6 +105,7 @@ function AppCard({ a, p }: { a: App; p?: Program }) {
               <div className="flex justify-between"><dt className="text-ink/60">{a.amountPaid > 0 ? "Paid" : "Due to reserve"}</dt><dd className="font-semibold">{inr(a.amountPaid > 0 ? a.amountPaid : (a.payNow ?? 0))}</dd></div>
               {a.amountPaid > 0 && total - a.amountPaid > 0 && <div className="flex justify-between"><dt className="text-ink/60">Balance{a.balanceDueAt ? ` due ${date(a.balanceDueAt)}` : ""}</dt><dd className="font-semibold">{inr(total - a.amountPaid)}</dd></div>}
               {a.paidAt && <p className="pt-2 text-[12px] text-ink/45">Last paid {date(a.paidAt)} · ref {a.razorpayPaymentId}</p>}
+              {a.amountPaid > 0 && a.paymentToken && <Link href={`/pay/${a.paymentToken}`} className="inline-flex pt-1 text-[13px] font-semibold text-brand hover:underline">Invoices &amp; receipts →</Link>}
             </dl>
           ) : <p className="mt-3 text-[14px] text-ink/60">Shared by our coordinator after review.</p>}
           <a href={`${WA}${a.number}`} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex text-[14px] font-semibold text-brand hover:underline">Message your coordinator →</a>

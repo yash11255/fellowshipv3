@@ -26,6 +26,11 @@ const StoreInput = z.object({
     (v) => v.split(",").map((e) => e.trim()).filter(Boolean).every((e) => z.string().email().safeParse(e).success),
     "Lead emails must be valid addresses, separated by commas",
   ).transform((v) => v.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean).join(", ")),
+  invoiceLegalName: z.string().trim().max(120).default(""),
+  invoiceGstin: z.string().trim().toUpperCase().max(15).refine((v) => v === "" || /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(v), "GSTIN should be 15 characters, e.g. 06ABCDE1234F1Z5").default(""),
+  invoiceAddress: z.string().trim().max(300).default(""),
+  invoiceState: z.string().trim().max(40).default("Haryana"),
+  invoiceSac: z.string().trim().max(10).default("999293"),
 });
 
 async function upsert(key: string, value: unknown) {

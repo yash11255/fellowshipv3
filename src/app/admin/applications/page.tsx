@@ -1,4 +1,5 @@
 import { STATUS_BADGE } from "@/lib/application-status";
+import { STATUS_LABEL } from "@/lib/fee-math";
 import Link from "next/link";
 import { connection } from "next/server";
 import { desc, eq } from "drizzle-orm";
@@ -24,7 +25,7 @@ export default async function Applications({ searchParams }: PageProps<"/admin/a
   const count = (s: string) => all.filter((x) => x.s === s).length;
   return (
     <>
-      <PageHeader title="Applications" sub={`${count("new")} new · ${count("accepted")} awaiting payment · ${count("paid") + count("enrolled")} confirmed`} />
+      <PageHeader title="Applications" sub={`${count("new")} new · ${count("accepted")} awaiting payment · ${count("paid")} deposit paid · ${count("enrolled")} enrolled`} />
       <div className="mb-3 flex flex-wrap gap-1">
         {["", "new", "reviewing", "accepted", "paid", "enrolled", "rejected"].map((s) => (
           <Link key={s || "all"} href={s ? `/admin/applications?status=${s}` : "/admin/applications"} className={`rounded-lg px-3 py-1.5 text-[13px] capitalize ${f === s ? "bg-[#ebebeb] font-semibold" : "text-[#4a4a4a]"}`}>{s || "All"}{s ? ` ${count(s)}` : ""}</Link>
@@ -42,7 +43,7 @@ export default async function Applications({ searchParams }: PageProps<"/admin/a
                   <td className="px-4 py-2.5">{progs.find((x) => x.slug === a.programSlug)?.title ?? a.programSlug}</td>
                   <td className="px-4 py-2.5 text-grey">{a.qualification}{a.experienceYears !== null ? ` · ${a.experienceYears} yrs` : ""}</td>
                   <td className="px-4 py-2.5">
-                    <span className={`rounded-full px-2 py-0.5 text-[12px] font-medium capitalize ${STATUS_BADGE[a.status]}`}>{a.status}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-[12px] font-medium ${STATUS_BADGE[a.status]}`}>{STATUS_LABEL[a.status] ?? a.status}</span>
                     {a.status === "paid" && a.balanceDueAt && (
                       <p className="mt-1 text-[12px] text-[#8a5a00]">Balance due {dateTime(a.balanceDueAt)}</p>
                     )}

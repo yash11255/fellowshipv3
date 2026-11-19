@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { useState, useTransition } from "react";
 import { AnimatePresence, motion } from "motion/react";
@@ -14,11 +15,13 @@ export function PayButton({ token, label }: { token: string; label: string }) {
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [test, setTest] = useState<{ amount: number; number: string } | null>(null);
   const [pending, start] = useTransition();
+  const router = useRouter();
+  const [full, setFull] = useState(false);
 
   if (msg?.ok) return (
     <div className="rounded-[24px] bg-mist p-6" role="status">
-      <p className="text-[20px] font-semibold tracking-[-0.02em]">Payment received. Your seat is reserved.</p>
-      <p className="mt-2 text-ink/65">{msg.text || "We've emailed you a receipt."} Our coordinator will share joining details.</p>
+      <p className="text-[20px] font-semibold tracking-[-0.02em]">{full ? "✓ Payment captured. You're enrolled!" : "✓ Payment captured. Your seat is reserved."}</p>
+      <p className="mt-2 text-ink/65">{full ? "Your fee is fully paid." : "The balance can be paid later from this same page."} We&apos;ve emailed your invoice. {msg.text}</p>
       <Link href="/account" className="mt-5 inline-flex h-11 items-center rounded-full bg-ink px-6 text-[14px] font-semibold text-white">Go to your dashboard</Link>
     </div>
   );
@@ -26,6 +29,7 @@ export function PayButton({ token, label }: { token: string; label: string }) {
   const finishTest = (outcome: "success" | "failed") => start(async () => {
     const r = await completeTestPayment(token, outcome);
     setTest(null);
+    if (r.ok) { setFull(!!r.fullyPaid); router.refresh(); }
     setMsg(r.ok ? { ok: true, text: `Test payment reference ${r.paymentId}.` } : { ok: false, text: r.error });
   });
 
@@ -42,6 +46,7 @@ export function PayButton({ token, label }: { token: string; label: string }) {
           key: r.keyId, order_id: r.orderId, amount: r.amount, currency: "INR", name: "Arthroscopy College", description: `Application ${r.number}`, prefill: r.prefill, theme: { color: "#0f1526" },
           handler: async (resp: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
             const c = await confirmApplicationPayment({ token, orderId: resp.razorpay_order_id, paymentId: resp.razorpay_payment_id, signature: resp.razorpay_signature });
+            if (c.ok) { setFull(!!("fullyPaid" in c && c.fullyPaid)); router.refresh(); }
             setMsg(c.ok ? { ok: true, text: "" } : { ok: false, text: c.error });
           },
         }).open();

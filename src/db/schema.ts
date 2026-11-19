@@ -258,6 +258,7 @@ export const applications = pgTable("applications", {
   status: applicationStatus("status").notNull().default("new"),
   feeAmount: integer("fee_amount"),                   // set on acceptance (INR, excl. GST)
   gstRate: integer("gst_rate").notNull().default(18),
+  feeIncludesGst: boolean("fee_includes_gst").notNull().default(false), // true = feeAmount is the GST-inclusive total
   payNow: integer("pay_now"),                         // amount due via link (deposit or full, incl. GST)
   paymentToken: text("payment_token").unique(),
   razorpayOrderId: text("razorpay_order_id"),
@@ -272,6 +273,20 @@ export const applications = pgTable("applications", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [index("applications_email").on(t.email), index("applications_status").on(t.status)]);
+
+// ── One row per captured programme payment = one GST invoice ──
+export const applicationPayments = pgTable("application_payments", {
+  id: serial("id").primaryKey(),
+  applicationId: integer("application_id").notNull().references(() => applications.id, { onDelete: "cascade" }),
+  invoiceNo: text("invoice_no").notNull().unique(),       // AC/2026-27/0001
+  paymentId: text("payment_id").notNull().unique(),       // Razorpay (or test_) payment id; unique = idempotent
+  kind: text("kind").notNull(),                           // full | deposit | balance
+  amount: integer("amount").notNull(),                    // INR received, incl. GST
+  taxable: integer("taxable").notNull(),                  // amount excl. GST
+  gst: integer("gst").notNull(),
+  gstRate: integer("gst_rate").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("application_payments_app").on(t.applicationId)]);
 
 // ── Programmes (editable in Admin → Programmes; seeded from src/lib/programs.ts) ──
 export const programs = pgTable("programs", {

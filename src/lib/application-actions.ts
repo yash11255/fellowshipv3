@@ -12,6 +12,8 @@ import { inr } from "./programs";
 import { getProgramBySlug } from "./program-store";
 import { getSlot, releaseSeat, seatsLeft, takeSeat } from "./slots";
 import { createRazorpayOrder, razorpayEnabled, verifyPaymentSignature } from "./razorpay";
+import { feeBreakdown, totalOf } from "./fee-math";
+import { invoiceEmailHtml, invoiceModel, invoiceSettings, invoiceUrl, recordPayment } from "./invoices";
 
 const DEFAULT_BALANCE_DUE_DAYS = 14;
 
@@ -83,6 +85,7 @@ const Decide = z.object({
   status: z.enum(["reviewing", "accepted", "rejected", "enrolled", "withdrawn"]),
   feeAmount: z.number().int().min(0).max(10_000_000).nullable().optional(),
   depositPercent: z.number().int().min(1).max(100).optional(),
+  feeIncludesGst: z.boolean().optional(),
   gstRate: z.number().int().min(0).max(28).optional(),
   cohort: z.string().max(40).optional(),
   slotId: z.number().int().positive().nullable().optional(),
@@ -113,15 +116,14 @@ export async function decideApplication(raw: z.input<typeof Decide>) {
   if (p.status === "accepted") {
     if (!p.feeAmount) return { ok: false as const, error: "Enter the program fee to accept." };
     const gst = p.gstRate ?? 18;
-    const total = Math.round(p.feeAmount * (1 + gst / 100));
-    const payNow = Math.round((total * (p.depositPercent ?? 100)) / 100);
-    Object.assign(patch, { feeAmount: p.feeAmount, gstRate: gst, payNow, amountPaid: 0, balanceDueAt: null, paidAt: null, paymentToken: a.paymentToken ?? crypto.randomBytes(18).toString("base64url") });
+    const b = feeBreakdown(p.feeAmount, gst, p.depositPercent ?? 100, !!p.feeIncludesGst);
+    Object.assign(patch, { feeAmount: p.feeAmount, feeIncludesGst: !!p.feeIncludesGst, gstRate: gst, payNow: b.payNow, amountPaid: 0, balanceDueAt: null, paidAt: null, paymentToken: a.paymentToken ?? crypto.randomBytes(18).toString("base64url") });
   }
   const [u] = await d.update(schema.applications).set(patch).where(eq(schema.applications.id, a.id)).returning();
 
   const first = a.name.split(" ")[0];
   const mail: Record<string, { s: string; t: string } | null> = {
-    accepted: { s: `You're accepted: ${program?.title ?? "Arthroscopy College"}`, t: `Hi ${first},\n\nCongratulations, your application ${a.number} has been accepted${u.cohort ? ` for the ${u.cohort} batch` : ""}.\n\nFee: ${inr(u.feeAmount ?? 0)} + ${u.gstRate}% GST\nPayable now${u.payNow && u.payNow < Math.round((u.feeAmount ?? 0) * (1 + u.gstRate / 100)) ? " (booking amount; balance is due once your seat is confirmed)" : " to confirm your seat"}: ${inr(u.payNow ?? 0)}\n\nPay securely here: ${base}/pay/${u.paymentToken}\n\nQuestions? Call +91 96506 20870.\n\nArthroscopy College` },
+    accepted: { s: `You're accepted: ${program?.title ?? "Arthroscopy College"}`, t: `Hi ${first},\n\nCongratulations, your application ${a.number} has been accepted${u.cohort ? ` for the ${u.cohort} batch` : ""}.\n\n${(() => { const b = feeBreakdown(u.feeAmount ?? 0, u.gstRate, Math.round(((u.payNow ?? 0) / Math.max(1, totalOf(u))) * 100), u.feeIncludesGst); return `Programme fee: ${inr(b.fee)}\nGST (${u.gstRate}%): ${inr(b.gst)}\nTotal: ${inr(b.total)}${u.feeIncludesGst ? " (GST included)" : ""}\n\n${(u.payNow ?? 0) < b.total ? `Pay now to reserve your seat: ${inr(u.payNow ?? 0)}\nBalance later: ${inr(b.total - (u.payNow ?? 0))} (same link, after your seat is reserved)` : `Pay now: ${inr(u.payNow ?? 0)} (full amount)`}`; })()}\n\nPay securely here: ${base}/pay/${u.paymentToken}\n\nQuestions? Call +91 96506 20870.\n\nArthroscopy College` },
     rejected: { s: `Update on your application ${a.number}`, t: `Hi ${first},\n\nThank you for applying. We're unable to offer a seat this time.${p.staffNote ? `\n\n${p.staffNote}` : ""}\n\nYou're welcome to apply for a future batch.\n\nArthroscopy College` },
     enrolled: { s: `Welcome to Arthroscopy College`, t: `Hi ${first},\n\nYou're enrolled${u.cohort ? ` in the ${u.cohort} batch` : ""}. Our coordinator will share joining details shortly.\n\nArthroscopy College` },
     reviewing: null, withdrawn: null,
@@ -159,7 +161,6 @@ function testPaymentsAllowed() {
 }
 
 type AppRow = typeof schema.applications.$inferSelect;
-const totalOf = (a: Pick<AppRow, "feeAmount" | "gstRate">) => Math.round((a.feeAmount ?? 0) * (1 + a.gstRate / 100));
 /** True while there's money still owed via the pay link: either the initial deposit, or a balance after it. */
 const isPayable = (a: AppRow) => (a.status === "accepted" || (a.status === "paid" && a.amountPaid < totalOf(a))) && !!a.payNow;
 
@@ -168,7 +169,8 @@ async function balanceDueDaysFor(a: AppRow) {
   return DEFAULT_BALANCE_DUE_DAYS;
 }
 
-/** Applies a successful payment to an application: first payment claims the seat, any later payment just tops up. */
+/** Applies a successful payment: first payment claims the seat; when the total is covered the candidate is
+ * enrolled automatically. Every payment gets a GST invoice, emailed to the candidate and the team. */
 async function settlePayment(a: AppRow, paymentId: string) {
   const d = await db();
   const total = totalOf(a);
@@ -179,7 +181,7 @@ async function settlePayment(a: AppRow, paymentId: string) {
 
   const dueDate = fullyPaid ? null : new Date(Date.now() + (await balanceDueDaysFor(a)) * 86_400_000);
   const patch: Partial<AppRow> = {
-    status: "paid", amountPaid: newPaid, razorpayPaymentId: paymentId, updatedAt: new Date(), paidAt: a.paidAt ?? new Date(),
+    status: fullyPaid ? "enrolled" : "paid", amountPaid: newPaid, razorpayPaymentId: paymentId, updatedAt: new Date(), paidAt: new Date(),
     payNow: fullyPaid ? 0 : total - newPaid,
     balanceDueAt: dueDate,
     // The order this payment settled is spent: clearing it stops a late/duplicate webhook for the same
@@ -202,13 +204,24 @@ async function settlePayment(a: AppRow, paymentId: string) {
       .where(eq(schema.applications.id, a.id)).returning();
   }
 
+  const kind = fullyPaid && firstPayment ? "full" : firstPayment ? "deposit" : "balance";
+  const inv = await recordPayment(u, paymentId, justPaid, kind);
+  const program = await getProgramBySlug(a.programSlug);
+  const settings = await invoiceSettings();
   const first = a.name.split(" ")[0];
-  if (fullyPaid) {
-    await sendEmail({ to: a.email, subject: `Seat confirmed: ${a.number}`, text: `Hi ${first},\n\nWe've received ${inr(justPaid)}${a.amountPaid > 0 ? ` (balance)` : ""}. Your seat is fully paid and confirmed. Our coordinator will share joining details.\n\nPayment reference: ${paymentId}\n\nArthroscopy College` }).catch(() => {});
-  } else {
-    await sendEmail({ to: a.email, subject: `Deposit received: ${a.number}`, text: `Hi ${first},\n\nWe've received your deposit of ${inr(justPaid)}. Your seat${a.cohort ? ` for ${a.cohort}` : ""} is reserved.\n\nBalance due: ${inr(total - newPaid)} by ${dueDate!.toLocaleDateString("en-IN")}. Pay any time before then at the same link: ${process.env.SITE_URL ?? "http://localhost:3200"}/pay/${a.paymentToken}\n\nIf the balance isn't paid by that date the seat is released to the next applicant.\n\nPayment reference: ${paymentId}\n\nArthroscopy College` }).catch(() => {});
-  }
-  await sendEmail({ to: process.env.TEAM_EMAIL ?? "orthosportin@gmail.com", subject: `${fullyPaid ? "Fully paid" : "Deposit paid"}: ${a.number} (${inr(justPaid)})`, text: `${a.name} · ${a.email} · ${paymentId}${!seatOk ? "\n⚠ Slot was full — needs manual reassignment/refund." : ""}` }).catch(() => {});
+  const site = process.env.SITE_URL ?? "http://localhost:3200";
+
+  const intro = fullyPaid
+    ? `Hi ${first},\n\nPayment captured: ${inr(justPaid)}. Your fee is fully paid and you're enrolled${u.cohort ? ` in the ${u.cohort} batch` : ""}. Our coordinator will share joining details.\n\nYour invoice is below.`
+    : `Hi ${first},\n\nPayment captured: ${inr(justPaid)} deposit. Your seat${u.cohort ? ` for ${u.cohort}` : ""} is reserved.\n\nBalance due: ${inr(total - newPaid)} by ${dueDate!.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })}. Pay it any time before then at ${site}/pay/${a.paymentToken}. If it isn't paid by that date the seat is released.\n\nYour invoice for this payment is below.`;
+  const subject = fullyPaid ? `Payment captured, you're enrolled: ${a.number}` : `Deposit received, seat reserved: ${a.number}`;
+  const textInv = inv ? `\n\nInvoice ${inv.invoiceNo}: ${invoiceUrl(u, inv)}` : "";
+  const html = inv ? invoiceEmailHtml(invoiceModel(u, inv, program?.title ?? "Programme fee", settings), intro, invoiceUrl(u, inv)) : undefined;
+  await sendEmail({ to: a.email, subject, text: `${intro}${textInv}\n\nPayment reference: ${paymentId}\n\nArthroscopy College`, html }).catch(() => {});
+
+  const teamIntro = `${fullyPaid ? "Fully paid, enrolled" : "Deposit paid, seat reserved"}: ${a.name} (${a.number}) paid ${inr(justPaid)}.\nPaid to date ${inr(newPaid)} of ${inr(total)}${fullyPaid ? "" : `, balance ${inr(total - newPaid)} due ${dueDate!.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })}`}.${!seatOk ? "\n⚠ Slot was full: needs manual reassignment or refund." : ""}\nAdmin: ${site}/admin/applications/${a.number}`;
+  await sendEmail({ to: process.env.TEAM_EMAIL ?? "orthosportin@gmail.com", subject: `${fullyPaid ? "Enrolled" : "Deposit paid"}: ${a.number} (${inr(justPaid)})${inv ? ` · Invoice ${inv.invoiceNo}` : ""}`,
+    text: `${teamIntro}${textInv}\nPayment ref: ${paymentId}`, html: inv ? invoiceEmailHtml(invoiceModel(u, inv, program?.title ?? "Programme fee", settings), teamIntro, invoiceUrl(u, inv)) : undefined }).catch(() => {});
   return u;
 }
 
@@ -223,7 +236,7 @@ export async function completeTestPayment(token: string, outcome: "success" | "f
   const paymentId = `test_${crypto.randomBytes(6).toString("hex")}`;
   const u = await settlePayment(a, paymentId);
   if (!u) return { ok: false as const, error: "This payment was already processed." };
-  return { ok: true as const, paymentId };
+  return { ok: true as const, paymentId, fullyPaid: u.amountPaid >= totalOf(u) };
 }
 
 export async function startApplicationPayment(token: string) {

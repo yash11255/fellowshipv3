@@ -2,6 +2,7 @@ import "server-only";
 import { and, asc, eq, gte, isNotNull, lt, lte, notInArray, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { sendEmail } from "./email";
+import { totalOf } from "./fee-math";
 
 export type SlotRow = typeof schema.programSlots.$inferSelect;
 
@@ -67,7 +68,7 @@ export async function releaseExpiredHolds(): Promise<number> {
   ));
   let released = 0;
   for (const a of overdue) {
-    const total = Math.round((a.feeAmount ?? 0) * (1 + a.gstRate / 100));
+    const total = totalOf(a);
     if (a.amountPaid >= total) { // fully paid after all; just clear the stale deadline
       await d.update(schema.applications).set({ balanceDueAt: null }).where(eq(schema.applications.id, a.id));
       continue;
