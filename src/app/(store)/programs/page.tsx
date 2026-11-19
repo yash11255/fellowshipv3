@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { inr } from "@/lib/programs";
@@ -9,20 +10,29 @@ import { Reveal } from "@/components/college/reveal";
 
 export const metadata: Metadata = { title: "Programmes", description: "Fellowship in Arthroscopy, Next-Gen ACL course, Physiotherapy internship and workshops at Arthroscopy College, Gurugram.", alternates: { canonical: "/programs" } };
 
-export default async function Programs() {
-  await connection(); // sale/fee pricing depends on the current time, so render this page per-request
-  const PROGRAMS = await getPrograms();
+export default function Programs() {
   return (
     <div className="page py-10 text-ink md:py-16">
       <Reveal>
         <h1 className="text-[clamp(2.5rem,1.5rem+3.6vw,4.75rem)] font-semibold leading-[0.97] tracking-[-0.045em]">Programmes</h1>
         <p className="mt-4 max-w-[56ch] text-[18px] text-ink/65">Hands-on arthroscopy and rehabilitation training for surgeons and physiotherapists, in our operating theatre and clinic in Gurugram.</p>
       </Reveal>
-      <ul className="mt-10 space-y-4">
-        {PROGRAMS.map((p, i) => {
-          const fees = effectiveFees(p);
-          const onSale = saleActive(p);
-          return (
+      <Suspense fallback={<div className="mt-10 space-y-4" aria-busy>{[0, 1, 2].map((i) => <div key={i} className="h-[280px] animate-pulse rounded-[28px] bg-mist/60" />)}</div>}>
+        <ProgramsList />
+      </Suspense>
+    </div>
+  );
+}
+
+async function ProgramsList() {
+  await connection(); // sale/fee pricing depends on the current time, so render this per-request
+  const PROGRAMS = await getPrograms();
+  return (
+    <ul className="mt-10 space-y-4">
+      {PROGRAMS.map((p, i) => {
+        const fees = effectiveFees(p);
+        const onSale = saleActive(p);
+        return (
           <li key={p.slug}>
             <Reveal delay={i * 0.05}>
               <Link href={`/programs/${p.slug}`} className="group relative grid overflow-hidden rounded-[28px] border border-ink/10 transition-colors hover:border-ink/30 md:grid-cols-[minmax(0,380px)_1fr]">
@@ -43,9 +53,8 @@ export default async function Programs() {
               </Link>
             </Reveal>
           </li>
-          );
-        })}
-      </ul>
-    </div>
+        );
+      })}
+    </ul>
   );
 }
