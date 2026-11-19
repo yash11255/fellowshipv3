@@ -80,11 +80,11 @@ export function SlotManager({ programSlug, initial }: { programSlug: string; ini
 
         {mode === "one" ? (
           <form className="mt-4 grid gap-3 rounded-lg border border-[#ececec] p-3 md:grid-cols-2" onSubmit={(e) => {
-            e.preventDefault(); const f = new FormData(e.currentTarget); const g = (k: string) => String(f.get(k) ?? "");
+            e.preventDefault(); const form = e.currentTarget; const f = new FormData(form); const g = (k: string) => String(f.get(k) ?? "");
             setErr(null); setMsg(null);
             start(async () => {
               const r = await createSlot({ programSlug, label: g("label"), startDate: g("startDate"), endDate: g("endDate") || undefined, capacity: Number(g("capacity")), balanceDueDays: Number(g("balanceDueDays") || 14) });
-              if (!r.ok) setErr(r.error); else { setMsg("Batch added."); e.currentTarget.reset(); refresh(); }
+              if (!r.ok) setErr(r.error); else { setMsg("Batch added."); form.reset(); refresh(); }
             });
           }}>
             <label className="block md:col-span-2"><span className="text-[12px] font-medium">Batch name</span><input name="label" required placeholder="December 2026 · Gurugram" className={`${input} mt-1`} /></label>
@@ -96,11 +96,11 @@ export function SlotManager({ programSlug, initial }: { programSlug: string; ini
           </form>
         ) : (
           <form className="mt-4 grid gap-3 rounded-lg border border-[#ececec] p-3 md:grid-cols-2" onSubmit={(e) => {
-            e.preventDefault(); const f = new FormData(e.currentTarget); const g = (k: string) => String(f.get(k) ?? "");
+            e.preventDefault(); const form = e.currentTarget; const f = new FormData(form); const g = (k: string) => String(f.get(k) ?? "");
             setErr(null); setMsg(null);
             start(async () => {
               const r = await generateMonthlySlots({ programSlug, labelTemplate: g("labelTemplate") || "{month} {year} batch", startMonth: g("startMonth"), count: Number(g("count") || 1), dayOfMonth: Number(g("dayOfMonth") || 1), durationDays: Number(g("durationDays") || 0), capacity: Number(g("capacity")), balanceDueDays: Number(g("balanceDueDays") || 14) });
-              if (!r.ok) setErr(r.error); else { setMsg(`${r.count} batches created.`); e.currentTarget.reset(); refresh(); }
+              if (!r.ok) setErr(r.error); else { setMsg(`${r.count} batches created.`); form.reset(); refresh(); }
             });
           }}>
             <label className="block md:col-span-2"><span className="text-[12px] font-medium">Name template</span><input name="labelTemplate" defaultValue="{month} {year} batch" className={`${input} mt-1`} /><span className="mt-1 block text-[11px] text-grey">Use {"{month}"} and {"{year}"} — e.g. one batch per month, every month.</span></label>
