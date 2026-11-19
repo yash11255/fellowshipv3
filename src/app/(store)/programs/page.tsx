@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import Image from "next/image";
 import Link from "next/link";
 import { inr } from "@/lib/programs";
@@ -9,6 +10,7 @@ import { Reveal } from "@/components/college/reveal";
 export const metadata: Metadata = { title: "Programmes", description: "Fellowship in Arthroscopy, Next-Gen ACL course, Physiotherapy internship and workshops at Arthroscopy College, Gurugram.", alternates: { canonical: "/programs" } };
 
 export default async function Programs() {
+  await connection(); // sale/fee pricing depends on the current time, so render this page per-request
   const PROGRAMS = await getPrograms();
   return (
     <div className="page py-10 text-ink md:py-16">

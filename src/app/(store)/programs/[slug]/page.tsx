@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -38,6 +39,7 @@ const REHAB_PHOTOS: Photo[] = [
 const WA = "https://wa.me/919650620870?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20the%20program";
 
 async function ProgramBody({ params }: { params: P["params"] }) {
+  await connection(); // sale/fee pricing depends on the current time, so render this page per-request
   const p = await getProgramBySlug((await params).slug);
   if (!p || !p.published) notFound();
   const { siteUrl } = await getSeo();
