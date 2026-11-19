@@ -35,7 +35,7 @@ export function AccountMenu() {
           <Link href="/account" onClick={() => setOpen(false)} className="block px-4 py-2.5 text-[14px] hover:bg-mist">My dashboard</Link>
           {me.staff && <Link href="/admin" onClick={() => setOpen(false)} className="block px-4 py-2.5 text-[14px] hover:bg-mist">Admin panel</Link>}
           <Link href="/account#security" onClick={() => setOpen(false)} className="block px-4 py-2.5 text-[14px] hover:bg-mist">Change password</Link>
-          <form action={logout} className="border-t border-ink/10"><button className="w-full px-4 py-2.5 text-left text-[14px] font-medium text-[#d4351c] hover:bg-mist">Sign out</button></form>
+          <form action={async () => { setOpen(false); setMe(null); await logout(); }} className="border-t border-ink/10"><button className="w-full px-4 py-2.5 text-left text-[14px] font-medium text-[#d4351c] hover:bg-mist">Sign out</button></form>
         </div>
       )}
     </div>
