@@ -26,7 +26,8 @@ export function saleEndsInMs(p: Pick<Program, "sale">, now: Date = new Date()): 
 
 /** Fee rows with the sale discount applied (amount = discounted, original = pre-sale price when a sale is live). */
 export function effectiveFees(p: Pick<Program, "fee" | "sale">, now: Date = new Date()): EffectiveFee[] {
-  if (!saleActive(p, now)) return p.fee.map((f) => ({ ...f }));
+  const fee = p.fee ?? [];
+  if (!saleActive(p, now)) return fee.map((f) => ({ ...f }));
   const pct = Math.min(90, Math.max(1, Math.round(p.sale!.percent)));
-  return p.fee.map((f) => ({ ...f, original: f.amount, amount: Math.round((f.amount * (100 - pct)) / 100) }));
+  return fee.map((f) => ({ ...f, original: f.amount, amount: Math.round((f.amount * (100 - pct)) / 100) }));
 }
